@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Skull King | مدیریت بازی</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel:wght@600;700;800;900&family=Vazirmatn:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --abyss:#050B14; --deep:#0C1A2E; --panel:#122642; --panel-2:#0E1F38; --panel-3:#0A1930;
+  --gold:#C9A227; --gold-bright:#EFCB6E; --blood:#9B2335; --teal:#3AA6A6; --green:#3E8B5C;
+  --parchment:#EAD9AE; --parchment-2:#DEC98C; --ink:#2C2013; --ink-soft:#4A3A24;
+  --text:#EFE6D0; --text-dim:#A9B7C9; --text-dim2:#7C8CA3;
+  --line:rgba(201,162,39,0.22); --line-strong:rgba(201,162,39,0.45);
+  --radius:14px; --radius-sm:9px; --shadow-deep:0 20px 60px rgba(0,0,0,0.55);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;min-height:100%;}
+body{
+  font-family:'Vazirmatn',sans-serif;
+  background:
+    radial-gradient(1200px 700px at 15% -10%, rgba(58,166,166,0.10), transparent 60%),
+    radial-gradient(1000px 800px at 110% 10%, rgba(201,162,39,0.08), transparent 55%),
+    linear-gradient(180deg, var(--abyss) 0%, var(--deep) 45%, #081222 100%);
+  color:var(--text); min-height:100vh; overflow-x:hidden; position:relative;
+}
+#bg-canvas{position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.5;}
+#coinCanvas{position:fixed; inset:0; pointer-events:none; z-index:60;}
+.wrap{position:relative; z-index:1; max-width:1040px; margin:0 auto; padding:16px 14px 70px;}
+button{font-family:inherit;}
+::-webkit-scrollbar{height:7px; width:7px;}
+::-webkit-scrollbar-thumb{background:var(--line-strong); border-radius:4px;}
+
+/* ---------- topbar & nav ---------- */
+.topbar{display:flex; align-items:center; justify-content:space-between; padding:8px 2px 14px; border-bottom:1px solid var(--line); margin-bottom:14px; gap:10px; flex-wrap:wrap;}
+.brand{display:flex; align-items:center; gap:10px;}
+.skull-icon{font-size:26px; filter:drop-shadow(0 0 10px rgba(239,203,110,0.5)); animation:sway 4s ease-in-out infinite;}
+@keyframes sway{0%,100%{transform:rotate(-6deg);}50%{transform:rotate(6deg);}}
+.brand h1{font-family:'Pirata One',cursive; direction:ltr; letter-spacing:1.5px; font-size:24px; margin:0; color:var(--gold-bright); text-shadow:0 0 16px rgba(239,203,110,0.3);}
+.brand h1 span{color:var(--text);}
+.brand small{display:block; font-size:10.5px; color:var(--text-dim); letter-spacing:.5px; margin-top:1px;}
+.topbar-actions{display:flex; gap:8px;}
+.icon-btn{background:var(--panel); border:1px solid var(--line); color:var(--text); width:40px; height:40px; border-radius:50%; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.2s;}
+.icon-btn:hover{border-color:var(--gold); box-shadow:0 0 12px rgba(201,162,39,0.3);}
+
+.navtabs{display:flex; gap:6px; overflow-x:auto; margin-bottom:20px; padding-bottom:2px;}
+.navtab{flex:none; background:transparent; border:1px solid var(--line); color:var(--text-dim); padding:9px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; transition:.2s; white-space:nowrap;}
+.navtab:hover{color:var(--text); border-color:var(--line-strong);}
+.navtab.active{background:linear-gradient(180deg,var(--gold-bright),var(--gold)); color:#1c1400; border-color:transparent;}
+
+/* ---------- generic ---------- */
+.screen{display:none; animation:fadeIn .4s ease;}
+.screen.active{display:block;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+.card{background:linear-gradient(180deg,var(--panel),var(--panel-2)); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-deep); padding:22px;}
+h2.section-title{font-family:'Cinzel',serif; font-weight:800; font-size:19px; color:var(--gold-bright); margin:0 0 4px; letter-spacing:.4px;}
+.section-sub{color:var(--text-dim); font-size:12.5px; margin:0 0 18px; line-height:1.7;}
+.btn{border:none; cursor:pointer; font-weight:700; font-size:13.5px; padding:12px 20px; border-radius:10px; transition:.2s;}
+.btn-ghost{background:transparent; border:1px solid var(--line); color:var(--text);}
+.btn-ghost:hover{border-color:var(--gold); color:var(--gold-bright);}
+.btn-gold{background:linear-gradient(180deg,var(--gold-bright),var(--gold)); color:#1c1400; box-shadow:0 6px 20px rgba(201,162,39,0.3);}
+.btn-gold:hover{transform:translateY(-2px); box-shadow:0 10px 24px rgba(201,162,39,0.4);}
+.btn-blood{background:linear-gradient(180deg,#C23B4A,#7A1B27); color:#fff;}
+.btn-sm{padding:8px 14px; font-size:12px; border-radius:8px;}
+.btn:disabled{opacity:.35; cursor:not-allowed; transform:none !important;}
+.badge{display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; padding:4px 9px; border-radius:20px;}
+.badge-progress{background:rgba(58,166,166,0.15); color:var(--teal); border:1px solid rgba(58,166,166,0.35);}
+.badge-done{background:rgba(201,162,39,0.15); color:var(--gold-bright); border:1px solid var(--line-strong);}
+.empty-state{text-align:center; padding:50px 20px; color:var(--text-dim);}
+.empty-state .ic{font-size:40px; margin-bottom:12px; opacity:.6;}
+
+/* ---------- home / setup ---------- */
+.player-chip-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
+.player-chip{display:flex; align-items:center; gap:6px; background:var(--abyss); border:1px solid var(--line); border-radius:20px; padding:6px 6px 6px 12px; font-size:13px;}
+.player-chip button{background:none; border:none; color:var(--blood); cursor:pointer; font-size:14px; width:22px; height:22px; border-radius:50%;}
+.player-chip button:hover{background:rgba(155,35,53,0.15);}
+.add-player-box{display:flex; gap:8px; margin-bottom:6px; position:relative;}
+.add-player-box input{flex:1; background:var(--abyss); border:1px solid var(--line); border-radius:8px; padding:12px 14px; color:var(--text); font-family:'Vazirmatn'; font-size:14px; outline:none; transition:.2s;}
+.add-player-box input:focus{border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,162,39,0.12);}
+.suggest-box{position:absolute; top:calc(100% + 4px); right:0; left:70px; background:var(--panel-3); border:1px solid var(--line-strong); border-radius:10px; z-index:20; max-height:160px; overflow-y:auto; box-shadow:var(--shadow-deep);}
+.suggest-item{padding:10px 14px; font-size:13px; cursor:pointer; border-bottom:1px solid var(--line);}
+.suggest-item:last-child{border-bottom:none;}
+.suggest-item:hover{background:rgba(201,162,39,0.1); color:var(--gold-bright);}
+.err-msg{color:var(--blood); font-size:12px; min-height:16px; margin:2px 2px 10px;}
+.setup-actions{display:flex; gap:12px; margin-top:14px; flex-wrap:wrap;}
+.continue-card{border:1px solid var(--teal); box-shadow:0 0 0 1px rgba(58,166,166,0.15), var(--shadow-deep); margin-bottom:18px;}
+.continue-card .row{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;}
+
+/* ---------- voyage map ---------- */
+.voyage-map{display:flex; align-items:center; overflow-x:auto; padding:22px 8px 28px; margin-bottom:6px;}
+.isle{flex:none; display:flex; flex-direction:column; align-items:center; gap:6px; width:56px; cursor:pointer;}
+.isle .dot{width:32px; height:32px; border-radius:50%; background:var(--panel); border:2px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono'; font-weight:700; font-size:12px; color:var(--text-dim); transition:.3s; z-index:2;}
+.isle.done .dot{background:var(--gold); border-color:var(--gold-bright); color:#1a1200; box-shadow:0 0 12px rgba(201,162,39,0.5);}
+.isle.current .dot{border-color:var(--teal); color:var(--teal); box-shadow:0 0 0 4px rgba(58,166,166,0.15); transform:scale(1.15);}
+.isle .lbl{font-size:9.5px; color:var(--text-dim);}
+.isle-line{flex:1; height:2px; background:repeating-linear-gradient(90deg,var(--line) 0 6px,transparent 6px 12px); margin-top:-22px; min-width:16px;}
+.isle-line.done{background:var(--gold); opacity:.55;}
+
+/* ---------- player round cards ---------- */
+.pr-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin:16px 0;}
+.pr-card{background:var(--panel-3); border:1px solid var(--line); border-radius:12px; padding:14px;}
+.pr-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+.pr-head .nm{font-weight:700; font-size:14px;}
+.pr-head .running{font-family:'JetBrains Mono'; font-size:12px; color:var(--text-dim);}
+.stepper-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:8px;}
+.stepper-row label{font-size:11.5px; color:var(--text-dim); width:56px; flex:none;}
+.stepper{display:flex; align-items:center; gap:6px; flex:1; justify-content:flex-end;}
+.stepper button{width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--text); font-size:15px; cursor:pointer;}
+.stepper button:hover{border-color:var(--gold);}
+.stepper input{width:44px; text-align:center; background:var(--abyss); border:1px solid var(--line); border-radius:8px; color:var(--text); font-family:'JetBrains Mono'; font-weight:700; padding:6px 2px; outline:none; font-size:13px;}
+.bonus-toggle{width:100%; background:transparent; border:1px dashed var(--line); color:var(--text-dim); border-radius:8px; padding:7px; font-size:11.5px; cursor:pointer; margin-top:4px; transition:.2s;}
+.bonus-toggle:hover{border-color:var(--gold); color:var(--gold-bright);}
+.bonus-toggle.has-bonus{border-style:solid; border-color:var(--gold); color:var(--gold-bright);}
+.bonus-panel{margin-top:8px; padding-top:8px; border-top:1px solid var(--line); display:none;}
+.bonus-panel.open{display:block;}
+.bonus-item{display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; gap:6px;}
+.bonus-item .lb{font-size:11px; color:var(--text-dim); flex:1;}
+.pr-score{margin-top:10px; text-align:center; padding:8px; border-radius:8px; background:rgba(255,255,255,0.03); font-family:'JetBrains Mono'; font-weight:800; font-size:16px;}
+.pr-score.pos{color:var(--green);}
+.pr-score.neg{color:var(--blood);}
+.pr-score.zero{color:var(--text-dim);}
+.tricks-warn{font-size:11.5px; color:var(--blood); margin:6px 2px; min-height:14px; text-align:center;}
+.round-submit-row{display:flex; justify-content:center; margin-top:8px;}
+
+/* round tabs */
+.round-tabs{display:flex; gap:6px; overflow-x:auto; margin:14px 0 18px; padding-bottom:4px;}
+.rtab{flex:none; width:40px; height:40px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--text-dim); font-family:'JetBrains Mono'; font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; position:relative; transition:.2s;}
+.rtab.filled{border-color:var(--line-strong); color:var(--text); background:var(--panel-2);}
+.rtab.filled::after{content:'●'; position:absolute; bottom:2px; font-size:6px; color:var(--gold);}
+.rtab.active{border-color:var(--teal); color:var(--teal); box-shadow:0 0 0 3px rgba(58,166,166,0.12);}
+
+/* ---------- ledger ---------- */
+.ledger-wrap{overflow-x:auto; border-radius:var(--radius); margin-top:20px;}
+.ledger{background:linear-gradient(180deg,rgba(0,0,0,0.03),rgba(0,0,0,0.08)),var(--parchment); border-radius:var(--radius); padding:4px; box-shadow:var(--shadow-deep); border:1px solid rgba(0,0,0,0.25);}
+table.score-table{width:100%; border-collapse:collapse; min-width:420px;}
+.score-table th,.score-table td{padding:9px 11px; text-align:center; font-family:'JetBrains Mono'; font-size:12.5px; color:var(--ink);}
+.score-table thead th{font-family:'Cinzel',serif; font-weight:700; font-size:12.5px; border-bottom:2px solid var(--ink-soft); padding-bottom:11px;}
+.score-table thead th:first-child{text-align:right; font-family:'Vazirmatn';}
+.score-table tbody td:first-child{text-align:right; font-family:'Vazirmatn'; font-weight:600; color:var(--ink-soft); font-size:11.5px; cursor:pointer;}
+.score-table tbody tr:hover{background:rgba(0,0,0,0.05);}
+.score-table tbody tr:nth-child(even){background:rgba(0,0,0,0.03);}
+.score-table tfoot td{border-top:2px solid var(--ink-soft); font-weight:800; font-size:14px; padding-top:13px;}
+.score-table tfoot td:first-child{text-align:right; font-family:'Vazirmatn'; font-size:12px;}
+.score-pos{color:#2E6B3E;} .score-neg{color:var(--blood);}
+.ledger-title{display:flex; align-items:center; justify-content:space-between; padding:13px 16px 2px;}
+.ledger-title h3{font-family:'Cinzel',serif; color:var(--ink); font-size:14px; margin:0;}
+.wax-seal{width:24px; height:24px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#C23B4A,#7A1B27); box-shadow:0 2px 4px rgba(0,0,0,0.4); flex:none;}
+
+/* ---------- history ---------- */
+.history-grid{display:grid; gap:12px;}
+.game-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 18px; cursor:pointer; transition:.2s;}
+.game-card:hover{border-color:var(--line-strong); transform:translateY(-1px);}
+.game-card-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:8px; flex-wrap:wrap;}
+.game-card-top .gname{font-weight:700; font-size:14.5px; font-family:'Cinzel',serif; color:var(--gold-bright);}
+.game-card-meta{display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--text-dim); margin-bottom:8px;}
+.game-card-players{font-size:12.5px; color:var(--text); margin-bottom:10px; line-height:1.8;}
+.game-card-foot{display:flex; align-items:center; justify-content:space-between;}
+.winner-tag{font-size:12.5px; color:var(--gold-bright); font-weight:700;}
+.del-btn{background:none; border:1px solid var(--line); color:var(--blood); border-radius:8px; padding:7px 12px; font-size:12px; cursor:pointer; transition:.2s;}
+.del-btn:hover{background:rgba(155,35,53,0.12); border-color:var(--blood);}
+
+/* ---------- game detail header ---------- */
+.detail-head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px;}
+.detail-head h2{font-family:'Cinzel',serif; font-size:20px; color:var(--gold-bright); margin:0 0 6px;}
+.detail-meta{font-size:12.5px; color:var(--text-dim); line-height:2;}
+
+/* ---------- leaderboard ---------- */
+.lb-table-wrap{overflow-x:auto; border-radius:var(--radius);}
+table.lb-table{width:100%; border-collapse:collapse; min-width:640px;}
+.lb-table th{font-family:'Cinzel',serif; font-size:11.5px; color:var(--text-dim); text-align:center; padding:10px 8px; border-bottom:1px solid var(--line);}
+.lb-table th:nth-child(2){text-align:right;}
+.lb-table td{padding:12px 8px; text-align:center; font-family:'JetBrains Mono'; font-size:12.5px;}
+.lb-table td:nth-child(2){text-align:right; font-family:'Vazirmatn'; font-weight:700; font-size:13.5px; cursor:pointer;}
+.lb-table td:nth-child(2):hover{color:var(--gold-bright);}
+.lb-row{transition:.2s;}
+.lb-row:hover{background:rgba(255,255,255,0.03);}
+.rank-cell{font-weight:800; font-size:15px;}
+.lb-row.r1{background:linear-gradient(90deg,rgba(201,162,39,0.14),transparent);}
+.lb-row.r2{background:linear-gradient(90deg,rgba(200,200,200,0.08),transparent);}
+.lb-row.r3{background:linear-gradient(90deg,rgba(180,110,60,0.10),transparent);}
+
+/* ---------- modal ---------- */
+.modal-overlay{position:fixed; inset:0; background:rgba(3,8,16,0.72); backdrop-filter:blur(3px); z-index:80; display:none; align-items:center; justify-content:center; padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:linear-gradient(180deg,var(--panel),var(--panel-2)); border:1px solid var(--line-strong); border-radius:16px; max-width:520px; width:100%; max-height:88vh; overflow-y:auto; padding:24px; box-shadow:var(--shadow-deep); animation:popIn .25s ease;}
+@keyframes popIn{from{opacity:0; transform:scale(.94) translateY(8px);} to{opacity:1; transform:scale(1) translateY(0);}}
+.modal-close{float:left; background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer;}
+.confirm-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:20px;}
+
+.stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:16px 0;}
+.stat-box{background:var(--panel-3); border:1px solid var(--line); border-radius:10px; padding:12px; text-align:center;}
+.stat-box .v{font-family:'JetBrains Mono'; font-weight:800; font-size:19px; color:var(--gold-bright);}
+.stat-box .l{font-size:11px; color:var(--text-dim); margin-top:3px;}
+canvas#chartCanvas{width:100%; height:140px; margin-top:8px;}
+
+.toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:var(--panel-2); border:1px solid var(--gold); color:var(--text); padding:11px 20px; border-radius:30px; font-size:13px; z-index:90; box-shadow:var(--shadow-deep); opacity:0; pointer-events:none; transition:.3s;}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
+
+.trophy{font-size:56px; animation:bob 2.4s ease-in-out infinite; text-align:center;}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-10px) rotate(2deg);}}
+
+@media (max-width:560px){
+  .brand h1{font-size:20px;}
+  .card{padding:15px;}
+  .pr-grid{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:400px){ .pr-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<canvas id="coinCanvas"></canvas>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <span class="skull-icon">☠️</span>
+      <div><h1>SKULL <span>KING</span></h1><small>مدیریت کامل بازی و آمار دریانوردان</small></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="soundToggle" title="صدا">🔊</button>
+    </div>
+  </div>
+
+  <div class="navtabs" id="navtabs">
+    <button class="navtab" data-view="home">🏠 خانه</button>
+    <button class="navtab" data-view="history">🏴‍☠️ تاریخچه بازی‌ها</button>
+    <button class="navtab" data-view="leaderboard">🏆 رتبه‌بندی بازیکنان</button>
+  </div>
+
+  <!-- HOME -->
+  <section id="view-home" class="screen">
+    <div id="continueCardHolder"></div>
+    <div class="card">
+      <h2 class="section-title">بازی جدید بساز</h2>
+      <p class="section-sub">هر تعداد بازیکن که نیاز داری اضافه کن. می‌تونی از بازیکن‌های قبلی هم دوباره استفاده کنی.</p>
+      <div class="player-chip-row" id="newPlayersChips"></div>
+      <div class="add-player-box">
+        <input type="text" id="newPlayerInput" placeholder="نام دریانورد را بنویس و Enter بزن...">
+        <button class="btn btn-ghost btn-sm" id="addPlayerBtn" style="flex:none;">افزودن</button>
+        <div class="suggest-box" id="suggestBox" style="display:none;"></div>
+      </div>
+      <div class="err-msg" id="newPlayerErr"></div>
+      <div class="setup-actions">
+        <button class="btn btn-gold" id="startGameBtn">شروع سفر ⚓</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="view-history" class="screen">
+    <div class="card" style="margin-bottom:16px;">
+      <h2 class="section-title">🏴‍☠️ تاریخچه بازی‌ها</h2>
+      <p class="section-sub">تمام سفرهای ثبت‌شده — روی هر بازی بزن تا جزئیات دورها را ببینی.</p>
+    </div>
+    <div class="history-grid" id="historyGrid"></div>
+  </section>
+
+  <!-- GAME DETAIL (active or past) -->
+  <section id="view-detail" class="screen">
+    <div class="card" style="margin-bottom:18px;">
+      <div class="detail-head">
+        <div>
+          <h2 id="detailTitle">بازی</h2>
+          <div class="detail-meta" id="detailMeta"></div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="badge" id="detailStatusBadge"></span>
+          <button class="btn btn-blood btn-sm" id="endGameBtn" style="display:none;">🏁 پایان بازی</button>
+          <button class="btn btn-ghost btn-sm" id="backToHistoryBtn">↩ بازگشت</button>
+        </div>
+      </div>
+      <div class="voyage-map" id="detailVoyageMap"></div>
+      <div class="round-tabs" id="roundTabs"></div>
+      <div id="roundEditor"></div>
+    </div>
+    <div class="ledger-wrap"><div class="ledger">
+      <div class="ledger-title"><h3>دفترچه‌ی امتیازات</h3><div class="wax-seal"></div></div>
+      <div style="overflow-x:auto;"><table class="score-table" id="scoreTable"></table></div>
+    </div></div>
+  </section>
+
+  <!-- LEADERBOARD -->
+  <section id="view-leaderboard" class="screen">
+    <div class="card">
+      <h2 class="section-title">🏆 رتبه‌بندی بازیکنان</h2>
+      <p class="section-sub">بر اساس میانگین امتیاز در بازی‌های تمام‌شده (معیار اصلی برای عادلانه بودن رتبه‌بندی)، با در نظر گرفتن درصد برد.</p>
+      <div class="lb-table-wrap"><table class="lb-table" id="lbTable"></table></div>
+    </div>
+  </section>
+</div>
+
+<!-- Player stats modal -->
+<div class="modal-overlay" id="statsModal">
+  <div class="modal-box">
+    <button class="modal-close" id="statsClose">✕</button>
+    <div style="clear:both;"></div>
+    <h2 class="section-title" id="statsName">—</h2>
+    <p class="section-sub">آمار کامل عملکرد در تمام بازی‌های تمام‌شده</p>
+    <div class="stat-grid" id="statsGrid"></div>
+    <canvas id="chartCanvas"></canvas>
+  </div>
+</div>
+
+<!-- Generic confirm modal (delete game / end game early) -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box" style="max-width:420px;">
+    <h2 class="section-title" id="confirmTitle">🗑 حذف بازی</h2>
+    <p class="section-sub" id="confirmText">آیا مطمئن هستید؟</p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost btn-sm" id="cancelDelete">انصراف</button>
+      <button class="btn btn-blood btn-sm" id="confirmDelete">تأیید</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   SKULL KING — full game manager
+   Data model (persisted via window.storage under key "sk_state"):
+   {
+     savedPlayers: [ "نام1", "نام2", ... ],
+     games: {
+        [gameId]: {
+          id, createdAt, updatedAt, status: 'in_progress'|'finished',
+          players: [{id,name}],
+          rounds: {
+             [roundNumber]: {
+                [playerId]: { bid, tricks, bonus:{mermaidPirate,mermaidSkullking,skullkingPirate,card14,blackCard14,other}, score }
+             }
+          }
+        }
+     },
+     activeGameId: string|null
+   }
+===================================================================== */
+const TOTAL_ROUNDS = 10;
+const STORAGE_KEY = 'sk_state';
+let state = { savedPlayers: [], games: {}, activeGameId: null };
+let ui = { view:'home', newPlayers: [], detailGameId:null, detailRound:1, statsPlayerName:null };
+let saveTimer = null;
+
+/* ---------------- persistence ---------------- */
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      state = Object.assign({savedPlayers:[],games:{},activeGameId:null}, parsed);
+    }
+  }catch(e){ /* no saved data yet */ }
+  renderAll();
+}
+function saveState(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(state), false); }
+    catch(e){ showToast('⚠ ذخیره‌سازی با خطا مواجه شد'); }
+  }, 150);
+}
+
+/* ---------------- utils ---------------- */
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function toFa(n){ return String(n).replace(/[0-9]/g, d=>'۰۱۲۳۴۵۶۷۸۹'[d]); }
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=String(s??''); return d.innerHTML; }
+function fmtDate(ts){
+  const d = new Date(ts);
+  return new Intl.DateTimeFormat('fa-IR',{dateStyle:'medium',timeStyle:'short'}).format(d);
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=> t.classList.remove('show'), 2200);
+}
+
+/* ---------------- audio engine ---------------- */
+let actx=null, soundOn=true;
+function ac(){ if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)(); return actx; }
+function envGain(ctx,t0,dur,peak=0.3){ const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(peak,t0+0.015); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); return g; }
+function playTone(freq,dur=0.18,type='sine',peak=0.25,delay=0){
+  if(!soundOn) return; const ctx=ac(); const t0=ctx.currentTime+delay;
+  const osc=ctx.createOscillator(); osc.type=type; osc.frequency.setValueAtTime(freq,t0);
+  const g=envGain(ctx,t0,dur,peak); osc.connect(g).connect(ctx.destination); osc.start(t0); osc.stop(t0+dur+0.02);
+}
+function playClick(){ playTone(320,0.06,'square',0.12); }
+function playCannon(){
+  if(!soundOn) return; const ctx=ac(); const t0=ctx.currentTime;
+  const bufSize=ctx.sampleRate*0.4; const buf=ctx.createBuffer(1,bufSize,ctx.sampleRate); const data=buf.getChannelData(0);
+  for(let i=0;i<bufSize;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/bufSize,2.2);
+  const noise=ctx.createBufferSource(); noise.buffer=buf;
+  const filt=ctx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.setValueAtTime(900,t0); filt.frequency.exponentialRampToValueAtTime(80,t0+0.35);
+  const g=ctx.createGain(); g.gain.setValueAtTime(0.5,t0); g.gain.exponentialRampToValueAtTime(0.001,t0+0.4);
+  noise.connect(filt).connect(g).connect(ctx.destination); noise.start(t0); playTone(60,0.35,'sine',0.4);
+}
+function playCoin(){ if(!soundOn) return; [1046.5,1318.5,1568,2093].forEach((f,i)=>playTone(f,0.14,'triangle',0.18,i*0.06)); }
+function playWomp(){
+  if(!soundOn) return; const ctx=ac(); const t0=ctx.currentTime;
+  const osc=ctx.createOscillator(); osc.type='sawtooth'; osc.frequency.setValueAtTime(220,t0); osc.frequency.exponentialRampToValueAtTime(70,t0+0.5);
+  const g=envGain(ctx,t0,0.5,0.18); osc.connect(g).connect(ctx.destination); osc.start(t0); osc.stop(t0+0.52);
+}
+function playFanfare(){ if(!soundOn) return; [523.25,659.25,783.99,1046.5,783.99,1046.5,1318.5].forEach((f,i)=>playTone(f,0.28,i%2?'triangle':'square',0.16,i*0.13)); }
+document.getElementById('soundToggle').addEventListener('click', ()=>{
+  soundOn=!soundOn; document.getElementById('soundToggle').textContent = soundOn?'🔊':'🔇'; if(soundOn) playClick();
+});
+
+/* ---------------- background bubble ambience ---------------- */
+const bgCanvas=document.getElementById('bg-canvas'); const bctx=bgCanvas.getContext('2d'); let bubbles=[];
+function resizeBg(){ bgCanvas.width=innerWidth; bgCanvas.height=innerHeight; }
+resizeBg(); addEventListener('resize', resizeBg);
+function tickBg(){
+  bctx.clearRect(0,0,bgCanvas.width,bgCanvas.height);
+  if(Math.random()<0.06) bubbles.push({x:Math.random()*bgCanvas.width,y:bgCanvas.height+20,r:2+Math.random()*5,speed:0.3+Math.random()*0.7,drift:(Math.random()-0.5)*0.4,alpha:0.05+Math.random()*0.15});
+  bubbles.forEach(b=>{ b.y-=b.speed; b.x+=b.drift; bctx.beginPath(); bctx.arc(b.x,b.y,b.r,0,Math.PI*2); bctx.strokeStyle=`rgba(201,162,39,${b.alpha})`; bctx.lineWidth=1; bctx.stroke(); });
+  bubbles=bubbles.filter(b=>b.y>-20);
+  requestAnimationFrame(tickBg);
+}
+tickBg();
+
+/* ---------------- coin confetti ---------------- */
+const coinCanvas=document.getElementById('coinCanvas'); const cctx=coinCanvas.getContext('2d');
+function resizeCoin(){ coinCanvas.width=innerWidth; coinCanvas.height=innerHeight; }
+resizeCoin(); addEventListener('resize', resizeCoin);
+function launchCoins(){
+  const coins=[]; for(let i=0;i<70;i++) coins.push({x:Math.random()*coinCanvas.width,y:-20-Math.random()*300,r:5+Math.random()*6,vy:2+Math.random()*3,vx:(Math.random()-0.5)*2,rot:Math.random()*Math.PI,vr:(Math.random()-0.5)*0.2,life:0});
+  let frame=0;
+  function step(){
+    cctx.clearRect(0,0,coinCanvas.width,coinCanvas.height); frame++; let alive=false;
+    coins.forEach(c=>{
+      c.y+=c.vy; c.x+=c.vx; c.rot+=c.vr; c.life++;
+      if(c.y<coinCanvas.height+20) alive=true;
+      cctx.save(); cctx.translate(c.x,c.y); cctx.rotate(c.rot);
+      cctx.beginPath(); cctx.ellipse(0,0,c.r,c.r*Math.abs(Math.cos(c.life*0.05)),0,0,Math.PI*2);
+      cctx.fillStyle='#E8C158'; cctx.strokeStyle='#9B7A16'; cctx.lineWidth=1; cctx.fill(); cctx.stroke(); cctx.restore();
+    });
+    if(alive && frame<260) requestAnimationFrame(step); else cctx.clearRect(0,0,coinCanvas.width,coinCanvas.height);
+  }
+  step();
+}
+
+/* ---------------- navigation ---------------- */
+document.getElementById('navtabs').addEventListener('click', e=>{
+  const btn = e.target.closest('.navtab'); if(!btn) return;
+  playClick(); goView(btn.dataset.view);
+});
+function goView(view, opts={}){
+  ui.view = view;
+  document.querySelectorAll('.navtab').forEach(b=> b.classList.toggle('active', b.dataset.view===view));
+  document.querySelectorAll('.screen').forEach(s=> s.classList.remove('active'));
+  const map = {home:'view-home', history:'view-history', detail:'view-detail', leaderboard:'view-leaderboard'};
+  document.getElementById(map[view]).classList.add('active');
+  if(view==='home') renderHome();
+  if(view==='history') renderHistory();
+  if(view==='leaderboard') renderLeaderboard();
+  if(view==='detail'){ ui.detailGameId = opts.gameId || ui.detailGameId; renderDetail(); }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* =========================================================
+   HOME — new game setup
+========================================================= */
+function normName(n){ return n.trim().replace(/\s+/g,' '); }
+function renderNewPlayersChips(){
+  const box = document.getElementById('newPlayersChips');
+  box.innerHTML = ui.newPlayers.map((n,i)=>`
+    <div class="player-chip"><span>${escapeHtml(n)}</span><button data-i="${i}" title="حذف">✕</button></div>
+  `).join('');
+  box.querySelectorAll('button').forEach(b=> b.addEventListener('click', e=>{
+    playClick(); ui.newPlayers.splice(+e.currentTarget.dataset.i,1); renderNewPlayersChips();
+  }));
+}
+function addNewPlayer(name){
+  const errBox = document.getElementById('newPlayerErr'); errBox.textContent='';
+  const n = normName(name);
+  if(!n){ errBox.textContent='نام نمی‌تواند خالی باشد.'; return; }
+  if(ui.newPlayers.some(p=> p.toLowerCase()===n.toLowerCase())){ errBox.textContent='این نام قبلاً به این بازی اضافه شده است.'; return; }
+  ui.newPlayers.push(n);
+  if(!state.savedPlayers.some(p=>p.toLowerCase()===n.toLowerCase())){ state.savedPlayers.push(n); saveState(); }
+  renderNewPlayersChips();
+  document.getElementById('newPlayerInput').value='';
+  document.getElementById('suggestBox').style.display='none';
+}
+document.getElementById('addPlayerBtn').addEventListener('click', ()=>{ playClick(); addNewPlayer(document.getElementById('newPlayerInput').value); });
+const newPlayerInput = document.getElementById('newPlayerInput');
+newPlayerInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); addNewPlayer(newPlayerInput.value); } });
+newPlayerInput.addEventListener('input', ()=>{
+  const q = newPlayerInput.value.trim().toLowerCase();
+  const box = document.getElementById('suggestBox');
+  if(!q){ box.style.display='none'; return; }
+  const matches = state.savedPlayers.filter(p=> p.toLowerCase().includes(q) && !ui.newPlayers.some(np=>np.toLowerCase()===p.toLowerCase())).slice(0,6);
+  if(!matches.length){ box.style.display='none'; return; }
+  box.innerHTML = matches.map(m=>`<div class="suggest-item">${escapeHtml(m)}</div>`).join('');
+  box.style.display='block';
+  box.querySelectorAll('.suggest-item').forEach(it=> it.addEventListener('click', ()=>{ playClick(); addNewPlayer(it.textContent); }));
+});
+document.addEventListener('click', e=>{ if(!e.target.closest('.add-player-box')) document.getElementById('suggestBox').style.display='none'; });
+
+document.getElementById('startGameBtn').addEventListener('click', ()=>{
+  const errBox = document.getElementById('newPlayerErr');
+  if(ui.newPlayers.length < 2){ errBox.textContent='حداقل باید ۲ بازیکن اضافه کنی.'; return; }
+  errBox.textContent='';
+  const players = ui.newPlayers.map(n=>({id:uid(), name:n}));
+  const game = { id:uid(), createdAt:Date.now(), updatedAt:Date.now(), finishedAt:null, status:'in_progress', players, rounds:{} };
+  state.games[game.id] = game;
+  state.activeGameId = game.id;
+  saveState();
+  playCannon();
+  ui.newPlayers = [];
+  ui.detailRound = 1;
+  goView('detail', {gameId: game.id});
+});
+
+function renderContinueCard(){
+  const holder = document.getElementById('continueCardHolder');
+  const g = state.activeGameId && state.games[state.activeGameId];
+  if(!g || g.status!=='in_progress'){ holder.innerHTML=''; return; }
+  const filled = Object.keys(g.rounds).length;
+  holder.innerHTML = `
+    <div class="card continue-card">
+      <div class="row">
+        <div>
+          <h2 class="section-title" style="margin-bottom:2px;">⛵ یک سفر نیمه‌کاره داری</h2>
+          <p class="section-sub" style="margin:0;">${g.players.length} بازیکن • ${toFa(filled)} از ${toFa(TOTAL_ROUNDS)} دور ثبت‌شده</p>
+        </div>
+        <button class="btn btn-gold btn-sm" id="continueBtn">ادامه بازی ⚓</button>
+      </div>
+    </div>`;
+  document.getElementById('continueBtn').addEventListener('click', ()=>{ playClick(); goView('detail',{gameId:g.id}); });
+}
+function renderHome(){
+  ui.newPlayers = [];
+  renderNewPlayersChips();
+  document.getElementById('newPlayerErr').textContent='';
+  renderContinueCard();
+}
+
+/* =========================================================
+   SCORING
+========================================================= */
+function bonusTotal(b){
+  if(!b) return 0;
+  return (b.mermaidPirate||0)*20 + (b.mermaidSkullking||0)*30 + (b.skullkingPirate||0)*30 + (b.card14||0)*10 + (b.blackCard14||0)*20 + (b.other||0);
+}
+function computeScore(round, bid, tricks, bonus){
+  bid=bid||0; tricks=tricks||0;
+  let base;
+  if(bid===0){ base = tricks===0 ? 10*round : -10*round; }
+  else{ base = tricks===bid ? 20*bid : -10*Math.abs(bid-tricks); }
+  return base + bonusTotal(bonus);
+}
+function emptyEntry(){ return {bid:0, tricks:0, bonus:{mermaidPirate:0,mermaidSkullking:0,skullkingPirate:0,card14:0,blackCard14:0,other:0}, score:0}; }
+function getEntry(game, round, playerId){
+  const r = game.rounds[round];
+  if(r && r[playerId]) return r[playerId];
+  return null;
+}
+function gameTotals(game){
+  const totals = {};
+  game.players.forEach(p=> totals[p.id]=0);
+  for(let r=1; r<=TOTAL_ROUNDS; r++){
+    const rd = game.rounds[r]; if(!rd) continue;
+    game.players.forEach(p=>{ if(rd[p.id]) totals[p.id]+= rd[p.id].score; });
+  }
+  return totals;
+}
+function runningTotal(game, uptoRound, playerId){
+  let sum=0;
+  for(let r=1;r<=uptoRound;r++){ const rd=game.rounds[r]; if(rd && rd[playerId]) sum+=rd[playerId].score; }
+  return sum;
+}
+function gameWinner(game){
+  const totals = gameTotals(game);
+  let best=null, bestScore=-Infinity;
+  game.players.forEach(p=>{ if(totals[p.id]>bestScore){ bestScore=totals[p.id]; best=p; } });
+  return best ? {player:best, score:bestScore} : null;
+}
+function roundsFilledCount(game){ return Object.keys(game.rounds).filter(r=> game.rounds[r] && Object.keys(game.rounds[r]).length===game.players.length).length; }
+
+/* =========================================================
+   GAME DETAIL VIEW (works for active + past games; editable)
+========================================================= */
+function renderDetail(){
+  const game = state.games[ui.detailGameId];
+  if(!game){ goView('history'); return; }
+  const totals = gameTotals(game);
+  const win = game.status==='finished' ? gameWinner(game) : null;
+
+  document.getElementById('detailTitle').textContent = `سفر ${escapeHtml(game.players.map(p=>p.name).join(' ، '))}`;
+  document.getElementById('detailMeta').innerHTML = `
+    شروع: ${fmtDate(game.createdAt)}<br>
+    ${game.finishedAt? 'پایان: '+fmtDate(game.finishedAt)+'<br>':''}
+    بازیکنان: ${toFa(game.players.length)} نفر • دورهای ثبت‌شده: ${toFa(roundsFilledCount(game))} از ${toFa(TOTAL_ROUNDS)}
+    ${win? '<br>برنده: 👑 '+escapeHtml(win.player.name):''}
+  `;
+  const badge = document.getElementById('detailStatusBadge');
+  if(game.status==='finished'){ badge.className='badge badge-done'; badge.textContent='🏁 تمام‌شده'; }
+  else{ badge.className='badge badge-progress'; badge.textContent='⛵ در حال انجام'; }
+  document.getElementById('endGameBtn').style.display = game.status==='in_progress' ? 'inline-flex' : 'none';
+
+  // voyage map
+  const map = document.getElementById('detailVoyageMap'); map.innerHTML='';
+  for(let r=1;r<=TOTAL_ROUNDS;r++){
+    const isle=document.createElement('div'); isle.className='isle';
+    const filled = game.rounds[r] && Object.keys(game.rounds[r]).length===game.players.length;
+    if(filled) isle.classList.add('done');
+    if(r===ui.detailRound) isle.classList.add('current');
+    isle.innerHTML = `<div class="dot">${filled?'🏴‍☠️':r}</div><div class="lbl">دور ${toFa(r)}</div>`;
+    isle.addEventListener('click', ()=>{ playClick(); ui.detailRound=r; renderDetail(); });
+    map.appendChild(isle);
+    if(r<TOTAL_ROUNDS){ const line=document.createElement('div'); line.className='isle-line'+(filled?' done':''); map.appendChild(line); }
+  }
+
+  // round tabs
+  const tabs = document.getElementById('roundTabs'); tabs.innerHTML='';
+  for(let r=1;r<=TOTAL_ROUNDS;r++){
+    const filled = game.rounds[r] && Object.keys(game.rounds[r]).length===game.players.length;
+    const b=document.createElement('button');
+    b.className='rtab'+(filled?' filled':'')+(r===ui.detailRound?' active':'');
+    b.textContent = toFa(r);
+    b.addEventListener('click', ()=>{ playClick(); ui.detailRound=r; renderDetail(); });
+    tabs.appendChild(b);
+  }
+
+  renderRoundEditor(game);
+  renderScoreTable(game);
+}
+
+function renderRoundEditor(game){
+  const round = ui.detailRound;
+  const holder = document.getElementById('roundEditor');
+  const existing = game.rounds[round];
+
+  let html = `<h2 class="section-title" style="margin-top:4px;">دور ${toFa(round)} از ${toFa(TOTAL_ROUNDS)} <span style="color:var(--text-dim); font-weight:500; font-size:12px;">— ${toFa(round)} کارت برای هر نفر</span></h2>`;
+  html += `<div class="pr-grid">`;
+  game.players.forEach(p=>{
+    const e = (existing && existing[p.id]) ? existing[p.id] : emptyEntry();
+    const run = runningTotal(game, round-1, p.id);
+    html += `
+      <div class="pr-card" data-pid="${p.id}">
+        <div class="pr-head"><span class="nm">${escapeHtml(p.name)}</span><span class="running">مجموع تا اینجا: ${toFa(run)}</span></div>
+        <div class="stepper-row">
+          <label>پیش‌بینی</label>
+          <div class="stepper">
+            <button class="dec-bid" type="button">−</button>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" class="bid-in" value="${e.bid}">
+            <button class="inc-bid" type="button">+</button>
+          </div>
+        </div>
+        <div class="stepper-row">
+          <label>برد واقعی</label>
+          <div class="stepper">
+            <button class="dec-tr" type="button">−</button>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" class="tricks-in" value="${e.tricks}">
+            <button class="inc-tr" type="button">+</button>
+          </div>
+        </div>
+        <button class="bonus-toggle ${bonusTotal(e.bonus)>0?'has-bonus':''}">🎁 جوایز ${bonusTotal(e.bonus)>0? '(+'+toFa(bonusTotal(e.bonus))+')' : ''}</button>
+        <div class="bonus-panel">
+          <div class="bonus-item"><span class="lb">پری‌دریایی می‌گیرد دزد دریایی (هر کدام +۲۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-mermaidPirate" style="width:48px" value="${e.bonus.mermaidPirate||0}"></div>
+          <div class="bonus-item"><span class="lb">پری‌دریایی می‌گیرد اسکلت‌کینگ (+۳۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-mermaidSkullking" style="width:48px" value="${e.bonus.mermaidSkullking||0}"></div>
+          <div class="bonus-item"><span class="lb">اسکلت‌کینگ می‌گیرد دزد دریایی (هر کدام +۳۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-skullkingPirate" style="width:48px" value="${e.bonus.skullkingPirate||0}"></div>
+          <div class="bonus-item"><span class="lb">بردن با کارت ۱۴ رنگی (هر کدام +۱۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-card14" style="width:48px" value="${e.bonus.card14||0}"></div>
+          <div class="bonus-item"><span class="lb">بردن با ۱۴ مشکی (+۲۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-blackCard14" style="width:48px" value="${e.bonus.blackCard14||0}"></div>
+          <div class="bonus-item"><span class="lb">جایزه دستی دیگر</span><input type="text" inputmode="numeric" pattern="-?[0-9]*" class="b-other" style="width:48px" value="${e.bonus.other||0}"></div>
+        </div>
+        <div class="pr-score" data-role="score">${scoreLabel(computeScore(round,e.bid,e.tricks,e.bonus))}</div>
+      </div>`;
+  });
+  html += `</div>`;
+  html += `<div class="tricks-warn" id="tricksWarn"></div>`;
+  html += `<div class="round-submit-row"><button class="btn btn-gold" id="saveRoundBtn">ذخیره دور ${existing? '(ویرایش) ':''}🏴‍☠️</button></div>`;
+  holder.innerHTML = html;
+
+  function scoreLabel(v){ const cls = v>0?'pos':v<0?'neg':'zero'; const sign=v>0?'+':''; return `<span class="${cls}">${sign}${toFa(v)}</span>`; }
+
+  // wire up interactions
+  holder.querySelectorAll('.pr-card').forEach(card=>{
+    const bidIn = card.querySelector('.bid-in');
+    const trIn = card.querySelector('.tricks-in');
+    const scoreEl = card.querySelector('[data-role="score"]');
+    const bonusInputs = card.querySelectorAll('.bonus-panel input');
+    const toggle = card.querySelector('.bonus-toggle');
+    const panel = card.querySelector('.bonus-panel');
+
+    function readBonus(){
+      return {
+        mermaidPirate: clampInt(card.querySelector('.b-mermaidPirate').value,0,99),
+        mermaidSkullking: clampInt(card.querySelector('.b-mermaidSkullking').value,0,1),
+        skullkingPirate: clampInt(card.querySelector('.b-skullkingPirate').value,0,99),
+        card14: clampInt(card.querySelector('.b-card14').value,0,99),
+        blackCard14: clampInt(card.querySelector('.b-blackCard14').value,0,1),
+        other: clampInt(card.querySelector('.b-other').value,-999,999),
+      };
+    }
+    function refreshScore(){
+      const bid = clampInt(bidIn.value,0,round);
+      const tr = clampInt(trIn.value,0,round);
+      const bonus = readBonus();
+      const bt = bonusTotal(bonus);
+      toggle.textContent = `🎁 جوایز ${bt>0? '(+'+toFa(bt)+')' : ''}`;
+      toggle.classList.toggle('has-bonus', bt>0);
+      scoreEl.innerHTML = scoreLabel(computeScore(round,bid,tr,bonus));
+      validateTricks();
+    }
+    function clampInt(v,min,max){ let n=parseInt(v); if(isNaN(n)) n=0; return Math.max(min,Math.min(max,n)); }
+
+    card.querySelector('.inc-bid').addEventListener('click', ()=>{ bidIn.value=clampInt((parseInt(bidIn.value)||0)+1,0,round); refreshScore(); });
+    card.querySelector('.dec-bid').addEventListener('click', ()=>{ bidIn.value=clampInt((parseInt(bidIn.value)||0)-1,0,round); refreshScore(); });
+    card.querySelector('.inc-tr').addEventListener('click', ()=>{ trIn.value=clampInt((parseInt(trIn.value)||0)+1,0,round); refreshScore(); });
+    card.querySelector('.dec-tr').addEventListener('click', ()=>{ trIn.value=clampInt((parseInt(trIn.value)||0)-1,0,round); refreshScore(); });
+    bidIn.addEventListener('input', ()=>{ bidIn.value = bidIn.value.replace(/[^0-9]/g,''); refreshScore(); });
+    trIn.addEventListener('input', ()=>{ trIn.value = trIn.value.replace(/[^0-9]/g,''); refreshScore(); });
+    bidIn.addEventListener('blur', ()=>{ bidIn.value = clampInt(bidIn.value,0,round); refreshScore(); });
+    trIn.addEventListener('blur', ()=>{ trIn.value = clampInt(trIn.value,0,round); refreshScore(); });
+    bonusInputs.forEach(inp=> inp.addEventListener('input', refreshScore));
+    toggle.addEventListener('click', ()=>{ playClick(); panel.classList.toggle('open'); });
+  });
+
+  function validateTricks(){
+    const trickVals = [...holder.querySelectorAll('.tricks-in')].map(el=> parseInt(el.value)||0);
+    const sum = trickVals.reduce((a,b)=>a+b,0);
+    const warn = document.getElementById('tricksWarn');
+    warn.textContent = (sum!==round) ? `⚠ مجموع دست‌های برده‌شده باید برابر ${toFa(round)} باشد (فعلاً: ${toFa(sum)})` : '';
+  }
+  validateTricks();
+
+  document.getElementById('saveRoundBtn').addEventListener('click', ()=>{
+    const cards = [...holder.querySelectorAll('.pr-card')];
+    const roundData = {};
+    cards.forEach(card=>{
+      const pid = card.dataset.pid;
+      const bid = parseInt(card.querySelector('.bid-in').value)||0;
+      const tricks = parseInt(card.querySelector('.tricks-in').value)||0;
+      const bonus = {
+        mermaidPirate: parseInt(card.querySelector('.b-mermaidPirate').value)||0,
+        mermaidSkullking: parseInt(card.querySelector('.b-mermaidSkullking').value)||0,
+        skullkingPirate: parseInt(card.querySelector('.b-skullkingPirate').value)||0,
+        card14: parseInt(card.querySelector('.b-card14').value)||0,
+        blackCard14: parseInt(card.querySelector('.b-blackCard14').value)||0,
+        other: parseInt(card.querySelector('.b-other').value)||0,
+      };
+      const score = computeScore(round, bid, tricks, bonus);
+      roundData[pid] = {bid,tricks,bonus,score};
+    });
+    game.rounds[round] = roundData;
+    game.updatedAt = Date.now();
+
+    const anyExact = Object.values(roundData).some(e=> e.bid===0 ? e.tricks===0 : e.tricks===e.bid);
+    playCannon();
+    setTimeout(()=> anyExact? playCoin() : playWomp(), 350);
+
+    // auto-advance / auto-finish
+    const filledRounds = roundsFilledCount(game);
+    if(round===TOTAL_ROUNDS && filledRounds===TOTAL_ROUNDS){
+      game.status='finished'; game.finishedAt=Date.now();
+      if(state.activeGameId===game.id) state.activeGameId=null;
+      saveState();
+      renderDetail();
+      setTimeout(()=>{ playFanfare(); launchCoins(); showToast('🏁 بازی به پایان رسید!'); }, 500);
+      return;
+    }
+    if(round < TOTAL_ROUNDS) ui.detailRound = round+1;
+    saveState();
+    renderDetail();
+    showToast('امتیاز دور ثبت شد ✓');
+  });
+}
+
+function renderScoreTable(game){
+  const table = document.getElementById('scoreTable');
+  const totals = gameTotals(game);
+  let thead = '<thead><tr><th>دور</th>' + game.players.map(p=>`<th>${escapeHtml(p.name)}</th>`).join('') + '</tr></thead>';
+  let tbody = '<tbody>';
+  for(let r=1;r<=TOTAL_ROUNDS;r++){
+    const rd = game.rounds[r]; if(!rd) continue;
+    tbody += `<tr data-r="${r}"><td>دور ${toFa(r)}</td>` + game.players.map(p=>{
+      const e = rd[p.id]; if(!e) return '<td>—</td>';
+      const cls = e.score>0?'score-pos':e.score<0?'score-neg':'';
+      const sign = e.score>0?'+':'';
+      return `<td class="${cls}">${sign}${toFa(e.score)}</td>`;
+    }).join('') + '</tr>';
+  }
+  tbody += '</tbody>';
+  let tfoot = '<tfoot><tr><td>مجموع</td>' + game.players.map(p=>{
+    const s = totals[p.id]; const cls=s>0?'score-pos':s<0?'score-neg':''; const sign=s>0?'+':'';
+    return `<td class="${cls}">${sign}${toFa(s)}</td>`;
+  }).join('') + '</tr></tfoot>';
+  table.innerHTML = thead+tbody+tfoot;
+  table.querySelectorAll('tbody tr').forEach(tr=> tr.addEventListener('click', ()=>{
+    playClick(); ui.detailRound = +tr.dataset.r; renderDetail();
+  }));
+}
+
+document.getElementById('backToHistoryBtn').addEventListener('click', ()=>{ playClick(); goView('history'); });
+
+document.getElementById('endGameBtn').addEventListener('click', ()=>{
+  playClick();
+  const game = state.games[ui.detailGameId];
+  if(!game) return;
+  const filled = roundsFilledCount(game);
+  if(filled===0){ showToast('هنوز هیچ دوری ثبت نشده — چیزی برای پایان دادن نیست.'); return; }
+  pendingConfirm = {type:'endGame', id: game.id};
+  document.getElementById('confirmTitle').textContent = '🏁 پایان زودهنگام بازی';
+  document.getElementById('confirmText').textContent = `تا الان ${toFa(filled)} دور از ${toFa(TOTAL_ROUNDS)} دور ثبت شده. با پایان دادن بازی، نتایج همین‌جا نهایی می‌شود و برنده مشخص می‌شود. این کار قابل بازگشت نیست (ولی می‌توانی بعداً دورهای ثبت‌شده را ویرایش کنی).`;
+  document.getElementById('confirmDelete').textContent = 'پایان بده';
+  document.getElementById('confirmDelete').className = 'btn btn-gold btn-sm';
+  document.getElementById('confirmModal').classList.add('open');
+});
+
+/* =========================================================
+   HISTORY VIEW
+========================================================= */
+let pendingConfirm = null;
+function renderHistory(){
+  const grid = document.getElementById('historyGrid');
+  const games = Object.values(state.games).sort((a,b)=> b.createdAt-a.createdAt);
+  if(!games.length){
+    grid.innerHTML = `<div class="empty-state"><div class="ic">🗺️</div>هنوز هیچ بازی‌ای ثبت نشده.<br>از تب «خانه» یک سفر جدید شروع کن.</div>`;
+    return;
+  }
+  grid.innerHTML = games.map(g=>{
+    const totals = gameTotals(g);
+    const win = g.status==='finished' ? gameWinner(g) : null;
+    const filled = roundsFilledCount(g);
+    return `
+    <div class="game-card" data-id="${g.id}">
+      <div class="game-card-top">
+        <span class="gname">سفر ${escapeHtml(g.players.slice(0,3).map(p=>p.name).join('، '))}${g.players.length>3?' و '+toFa(g.players.length-3)+' نفر دیگر':''}</span>
+        <span class="badge ${g.status==='finished'?'badge-done':'badge-progress'}">${g.status==='finished'?'🏁 تمام‌شده':'⛵ در حال انجام'}</span>
+      </div>
+      <div class="game-card-meta">
+        <span>📅 ${fmtDate(g.createdAt)}</span>
+        <span>👥 ${toFa(g.players.length)} بازیکن</span>
+        <span>🗺️ ${toFa(filled)}/${toFa(TOTAL_ROUNDS)} دور</span>
+      </div>
+      <div class="game-card-players">${g.players.map(p=> `${escapeHtml(p.name)}: <b style="color:var(--gold-bright)">${toFa(totals[p.id])}</b>`).join(' &nbsp;|&nbsp; ')}</div>
+      <div class="game-card-foot">
+        <span class="winner-tag">${win? '👑 برنده: '+escapeHtml(win.player.name) : '&nbsp;'}</span>
+        <button class="del-btn" data-id="${g.id}">🗑 حذف</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.game-card').forEach(card=> card.addEventListener('click', e=>{
+    if(e.target.closest('.del-btn')) return;
+    playClick(); ui.detailRound = 1;
+    const g = state.games[card.dataset.id];
+    const firstEmpty = [...Array(TOTAL_ROUNDS)].findIndex((_,i)=> !g.rounds[i+1]);
+    ui.detailRound = firstEmpty===-1? TOTAL_ROUNDS : firstEmpty+1;
+    goView('detail', {gameId:card.dataset.id});
+  }));
+  grid.querySelectorAll('.del-btn').forEach(btn=> btn.addEventListener('click', e=>{
+    e.stopPropagation(); playClick();
+    pendingConfirm = {type:'deleteGame', id: btn.dataset.id};
+    document.getElementById('confirmTitle').textContent = '🗑 حذف بازی';
+    document.getElementById('confirmText').textContent = 'آیا مطمئن هستید که می‌خواهید این بازی و تمام اطلاعات دورهای آن را حذف کنید؟ این عملیات قابل بازگشت نیست.';
+    document.getElementById('confirmDelete').textContent = 'حذف کن';
+    document.getElementById('confirmDelete').className = 'btn btn-blood btn-sm';
+    document.getElementById('confirmModal').classList.add('open');
+  }));
+}
+document.getElementById('cancelDelete').addEventListener('click', ()=>{ playClick(); document.getElementById('confirmModal').classList.remove('open'); pendingConfirm=null; });
+document.getElementById('confirmDelete').addEventListener('click', ()=>{
+  if(pendingConfirm && pendingConfirm.type==='deleteGame'){
+    const id = pendingConfirm.id;
+    delete state.games[id];
+    if(state.activeGameId===id) state.activeGameId=null;
+    saveState();
+    showToast('بازی حذف شد');
+    pendingConfirm=null;
+    document.getElementById('confirmModal').classList.remove('open');
+    renderHistory();
+    return;
+  }
+  if(pendingConfirm && pendingConfirm.type==='endGame'){
+    const game = state.games[pendingConfirm.id];
+    if(game){
+      game.status='finished';
+      game.finishedAt=Date.now();
+      if(state.activeGameId===game.id) state.activeGameId=null;
+      saveState();
+      document.getElementById('confirmModal').classList.remove('open');
+      pendingConfirm=null;
+      renderDetail();
+      setTimeout(()=>{ playFanfare(); launchCoins(); showToast('🏁 بازی به پایان رسید!'); }, 300);
+      return;
+    }
+  }
+  pendingConfirm=null;
+  document.getElementById('confirmModal').classList.remove('open');
+  renderHistory();
+});
+
+/* =========================================================
+   LEADERBOARD + PLAYER STATS
+========================================================= */
+function computePlayerStats(){
+  // aggregate by player name across finished games
+  const stats = {}; // name -> {games, wins, totalScore, scores:[], bids:[], tricks:[], bidSuccess, bidFail, bestRound, worstRound, timeline:[]}
+  const finished = Object.values(state.games).filter(g=> g.status==='finished').sort((a,b)=> a.createdAt-b.createdAt);
+  finished.forEach(g=>{
+    const totals = gameTotals(g);
+    const win = gameWinner(g);
+    g.players.forEach(p=>{
+      const name = p.name;
+      if(!stats[name]) stats[name] = {name, games:0, wins:0, totalScore:0, scores:[], bids:[], tricks:[], bidSuccess:0, bidFail:0, bestRound:-Infinity, worstRound:Infinity, timeline:[]};
+      const s = stats[name];
+      s.games++;
+      if(win && win.player.id===p.id) s.wins++;
+      s.totalScore += totals[p.id];
+      s.scores.push(totals[p.id]);
+      s.timeline.push({date:g.createdAt, score:totals[p.id]});
+      for(let r=1;r<=TOTAL_ROUNDS;r++){
+        const rd=g.rounds[r]; if(!rd||!rd[p.id]) continue;
+        const e = rd[p.id];
+        s.bids.push(e.bid); s.tricks.push(e.tricks);
+        const success = e.bid===0? e.tricks===0 : e.tricks===e.bid;
+        if(success) s.bidSuccess++; else s.bidFail++;
+        if(e.score>s.bestRound) s.bestRound=e.score;
+        if(e.score<s.worstRound) s.worstRound=e.score;
+      }
+    });
+  });
+  return Object.values(stats).map(s=>({
+    ...s,
+    avgScore: s.games? s.totalScore/s.games : 0,
+    winRate: s.games? s.wins/s.games*100 : 0,
+    highest: s.scores.length? Math.max(...s.scores): 0,
+    lowest: s.scores.length? Math.min(...s.scores): 0,
+    avgBid: s.bids.length? s.bids.reduce((a,b)=>a+b,0)/s.bids.length : 0,
+    avgTricks: s.tricks.length? s.tricks.reduce((a,b)=>a+b,0)/s.tricks.length : 0,
+    bestRound: s.bestRound===-Infinity?0:s.bestRound,
+    worstRound: s.worstRound===Infinity?0:s.worstRound,
+  }));
+}
+function renderLeaderboard(){
+  const table = document.getElementById('lbTable');
+  const stats = computePlayerStats();
+  if(!stats.length){
+    table.innerHTML = '';
+    table.parentElement.innerHTML = `<div class="empty-state"><div class="ic">🏆</div>وقتی حداقل یک بازی را تمام کنی، رتبه‌بندی اینجا نمایش داده می‌شود.</div>`;
+    return;
+  }
+  // sort: avg score desc, then win rate desc, then games desc
+  stats.sort((a,b)=> b.avgScore-a.avgScore || b.winRate-a.winRate || b.games-a.games);
+  const medal = ['🥇','🥈','🥉'];
+  let thead = `<thead><tr><th>رتبه</th><th>بازیکن</th><th>بازی‌ها</th><th>بردها</th><th>٪ برد</th><th>میانگین</th><th>مجموع</th><th>بهترین بازی</th></tr></thead>`;
+  let tbody = '<tbody>' + stats.map((s,i)=>{
+    const rankCls = i===0?'r1':i===1?'r2':i===2?'r3':'';
+    return `<tr class="lb-row ${rankCls}" data-name="${escapeHtml(s.name)}">
+      <td class="rank-cell">${medal[i]||toFa(i+1)}</td>
+      <td>${escapeHtml(s.name)}</td>
+      <td>${toFa(s.games)}</td>
+      <td>${toFa(s.wins)}</td>
+      <td>${toFa(s.winRate.toFixed(0))}٪</td>
+      <td>${s.avgScore>=0?'+':''}${toFa(s.avgScore.toFixed(1))}</td>
+      <td>${s.totalScore>=0?'+':''}${toFa(s.totalScore)}</td>
+      <td>${s.highest>=0?'+':''}${toFa(s.highest)}</td>
+    </tr>`;
+  }).join('') + '</tbody>';
+  table.innerHTML = thead+tbody;
+  table.querySelectorAll('tbody tr').forEach(tr=> tr.addEventListener('click', ()=>{
+    playClick(); openPlayerStats(tr.dataset.name);
+  }));
+}
+
+function openPlayerStats(name){
+  const stats = computePlayerStats().find(s=> s.name===name);
+  if(!stats) return;
+  document.getElementById('statsName').textContent = '🏴‍☠️ ' + name;
+  const g = document.getElementById('statsGrid');
+  const rows = [
+    ['بازی‌ها', toFa(stats.games)],
+    ['بردها', toFa(stats.wins)],
+    ['٪ برد', toFa(stats.winRate.toFixed(0))+'٪'],
+    ['مجموع امتیاز', (stats.totalScore>=0?'+':'')+toFa(stats.totalScore)],
+    ['میانگین امتیاز', (stats.avgScore>=0?'+':'')+toFa(stats.avgScore.toFixed(1))],
+    ['بالاترین امتیاز بازی', (stats.highest>=0?'+':'')+toFa(stats.highest)],
+    ['پایین‌ترین امتیاز بازی', (stats.lowest>=0?'+':'')+toFa(stats.lowest)],
+    ['میانگین پیش‌بینی', toFa(stats.avgBid.toFixed(1))],
+    ['میانگین برد واقعی', toFa(stats.avgTricks.toFixed(1))],
+    ['پیش‌بینی‌های موفق', toFa(stats.bidSuccess)],
+    ['پیش‌بینی‌های ناموفق', toFa(stats.bidFail)],
+    ['بهترین دور', (stats.bestRound>=0?'+':'')+toFa(stats.bestRound)],
+    ['بدترین دور', (stats.worstRound>=0?'+':'')+toFa(stats.worstRound)],
+  ];
+  g.innerHTML = rows.map(([l,v])=> `<div class="stat-box"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+  drawChart(stats.timeline);
+  document.getElementById('statsModal').classList.add('open');
+}
+document.getElementById('statsClose').addEventListener('click', ()=>{ playClick(); document.getElementById('statsModal').classList.remove('open'); });
+document.getElementById('statsModal').addEventListener('click', e=>{ if(e.target.id==='statsModal') document.getElementById('statsModal').classList.remove('open'); });
+
+function drawChart(timeline){
+  const canvas = document.getElementById('chartCanvas');
+  const dpr = window.devicePixelRatio||1;
+  const w = canvas.clientWidth||460, h=140;
+  canvas.width = w*dpr; canvas.height = h*dpr;
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,w,h);
+  if(!timeline.length){ ctx.fillStyle='#A9B7C9'; ctx.font='12px Vazirmatn'; ctx.textAlign='center'; ctx.fillText('داده‌ای برای نمودار موجود نیست', w/2, h/2); return; }
+  const scores = timeline.map(t=>t.score);
+  const min = Math.min(...scores,0), max = Math.max(...scores,0);
+  const pad = 18;
+  const range = (max-min)||1;
+  const stepX = timeline.length>1 ? (w-pad*2)/(timeline.length-1) : 0;
+  function px(i){ return pad + i*stepX; }
+  function py(v){ return h-pad - ((v-min)/range)*(h-pad*2); }
+  // zero line
+  ctx.strokeStyle='rgba(169,183,201,0.25)'; ctx.beginPath(); ctx.moveTo(pad,py(0)); ctx.lineTo(w-pad,py(0)); ctx.stroke();
+  // line
+  ctx.beginPath();
+  timeline.forEach((t,i)=>{ const x=px(i), y=py(t.score); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+  const grad = ctx.createLinearGradient(0,0,w,0);
+  grad.addColorStop(0,'#3AA6A6'); grad.addColorStop(1,'#EFCB6E');
+  ctx.strokeStyle=grad; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
+  // points
+  timeline.forEach((t,i)=>{
+    const x=px(i), y=py(t.score);
+    ctx.beginPath(); ctx.arc(x,y,3.5,0,Math.PI*2);
+    ctx.fillStyle = t.score>=0? '#3AA6A6':'#9B2335'; ctx.fill();
+  });
+}
+
+/* =========================================================
+   INIT
+========================================================= */
+loadState();
+goView('home');
+</script>
+</body>
+</html>
