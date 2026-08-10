@@ -558,7 +558,7 @@ function renderHome(){
 ========================================================= */
 function bonusTotal(b){
   if(!b) return 0;
-  return (b.mermaidPirate||0)*20 + (b.mermaidSkullking||0)*30 + (b.skullkingPirate||0)*30 + (b.card14||0)*10 + (b.blackCard14||0)*20 + (b.other||0);
+  return (b.mermaidPirate||0)*20 + (b.mermaidSkullking||0)*40 + (b.skullkingPirate||0)*30 + (b.card14||0)*10 + (b.blackCard14||0)*20 + (b.other||0);
 }
 function computeScore(round, bid, tricks, bonus){
   bid=bid||0; tricks=tricks||0;
@@ -688,18 +688,17 @@ function renderRoundEditor(game){
         </div>
         <button class="bonus-toggle ${bonusTotal(e.bonus)>0?'has-bonus':''}">🎁 جوایز ${bonusTotal(e.bonus)>0? '(+'+toFa(bonusTotal(e.bonus))+')' : ''}</button>
         <div class="bonus-panel">
-          <div class="bonus-item"><span class="lb">پری‌دریایی می‌گیرد دزد دریایی (هر کدام +۲۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-mermaidPirate" style="width:48px" value="${e.bonus.mermaidPirate||0}"></div>
-          <div class="bonus-item"><span class="lb">پری‌دریایی می‌گیرد اسکلت‌کینگ (+۳۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-mermaidSkullking" style="width:48px" value="${e.bonus.mermaidSkullking||0}"></div>
-          <div class="bonus-item"><span class="lb">اسکلت‌کینگ می‌گیرد دزد دریایی (هر کدام +۳۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-skullkingPirate" style="width:48px" value="${e.bonus.skullkingPirate||0}"></div>
-          <div class="bonus-item"><span class="lb">بردن با کارت ۱۴ رنگی (هر کدام +۱۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-card14" style="width:48px" value="${e.bonus.card14||0}"></div>
-          <div class="bonus-item"><span class="lb">بردن با ۱۴ مشکی (+۲۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-blackCard14" style="width:48px" value="${e.bonus.blackCard14||0}"></div>
+          <div class="bonus-item"><span class="lb">دزد دریایی پری‌دریایی را می‌گیرد (هر کدام +۲۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-mermaidPirate" style="width:48px" value="${e.bonus.mermaidPirate||0}"></div>
+          <div class="bonus-item"><span class="lb">پری‌دریایی اسکال‌کینگ را می‌گیرد (+۴۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-mermaidSkullking" style="width:48px" value="${e.bonus.mermaidSkullking||0}"></div>
+          <div class="bonus-item"><span class="lb">اسکال‌کینگ دزد دریایی را می‌گیرد (هر کدام +۳۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-skullkingPirate" style="width:48px" value="${e.bonus.skullkingPirate||0}"></div>
+          <div class="bonus-item"><span class="lb">جمع کردن کارت ۱۴ رنگی (هر کدام +۱۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-card14" style="width:48px" value="${e.bonus.card14||0}"></div>
+          <div class="bonus-item"><span class="lb">جمع کردن ۱۴ مشکی (+۲۰)</span><input type="text" inputmode="numeric" pattern="[0-9]*" class="b-blackCard14" style="width:48px" value="${e.bonus.blackCard14||0}"></div>
           <div class="bonus-item"><span class="lb">جایزه دستی دیگر</span><input type="text" inputmode="numeric" pattern="-?[0-9]*" class="b-other" style="width:48px" value="${e.bonus.other||0}"></div>
         </div>
         <div class="pr-score" data-role="score">${scoreLabel(computeScore(round,e.bid,e.tricks,e.bonus))}</div>
       </div>`;
   });
   html += `</div>`;
-  html += `<div class="tricks-warn" id="tricksWarn"></div>`;
   html += `<div class="round-submit-row"><button class="btn btn-gold" id="saveRoundBtn">ذخیره دور ${existing? '(ویرایش) ':''}🏴‍☠️</button></div>`;
   holder.innerHTML = html;
 
@@ -725,36 +724,27 @@ function renderRoundEditor(game){
       };
     }
     function refreshScore(){
-      const bid = clampInt(bidIn.value,0,round);
-      const tr = clampInt(trIn.value,0,round);
+      const bid = clampInt(bidIn.value,0,999);
+      const tr = clampInt(trIn.value,0,999);
       const bonus = readBonus();
       const bt = bonusTotal(bonus);
       toggle.textContent = `🎁 جوایز ${bt>0? '(+'+toFa(bt)+')' : ''}`;
       toggle.classList.toggle('has-bonus', bt>0);
       scoreEl.innerHTML = scoreLabel(computeScore(round,bid,tr,bonus));
-      validateTricks();
     }
     function clampInt(v,min,max){ let n=parseInt(v); if(isNaN(n)) n=0; return Math.max(min,Math.min(max,n)); }
 
-    card.querySelector('.inc-bid').addEventListener('click', ()=>{ bidIn.value=clampInt((parseInt(bidIn.value)||0)+1,0,round); refreshScore(); });
-    card.querySelector('.dec-bid').addEventListener('click', ()=>{ bidIn.value=clampInt((parseInt(bidIn.value)||0)-1,0,round); refreshScore(); });
-    card.querySelector('.inc-tr').addEventListener('click', ()=>{ trIn.value=clampInt((parseInt(trIn.value)||0)+1,0,round); refreshScore(); });
-    card.querySelector('.dec-tr').addEventListener('click', ()=>{ trIn.value=clampInt((parseInt(trIn.value)||0)-1,0,round); refreshScore(); });
+    card.querySelector('.inc-bid').addEventListener('click', ()=>{ bidIn.value=clampInt((parseInt(bidIn.value)||0)+1,0,999); refreshScore(); });
+    card.querySelector('.dec-bid').addEventListener('click', ()=>{ bidIn.value=clampInt((parseInt(bidIn.value)||0)-1,0,999); refreshScore(); });
+    card.querySelector('.inc-tr').addEventListener('click', ()=>{ trIn.value=clampInt((parseInt(trIn.value)||0)+1,0,999); refreshScore(); });
+    card.querySelector('.dec-tr').addEventListener('click', ()=>{ trIn.value=clampInt((parseInt(trIn.value)||0)-1,0,999); refreshScore(); });
     bidIn.addEventListener('input', ()=>{ bidIn.value = bidIn.value.replace(/[^0-9]/g,''); refreshScore(); });
     trIn.addEventListener('input', ()=>{ trIn.value = trIn.value.replace(/[^0-9]/g,''); refreshScore(); });
-    bidIn.addEventListener('blur', ()=>{ bidIn.value = clampInt(bidIn.value,0,round); refreshScore(); });
-    trIn.addEventListener('blur', ()=>{ trIn.value = clampInt(trIn.value,0,round); refreshScore(); });
+    bidIn.addEventListener('blur', ()=>{ bidIn.value = clampInt(bidIn.value,0,999); refreshScore(); });
+    trIn.addEventListener('blur', ()=>{ trIn.value = clampInt(trIn.value,0,999); refreshScore(); });
     bonusInputs.forEach(inp=> inp.addEventListener('input', refreshScore));
     toggle.addEventListener('click', ()=>{ playClick(); panel.classList.toggle('open'); });
   });
-
-  function validateTricks(){
-    const trickVals = [...holder.querySelectorAll('.tricks-in')].map(el=> parseInt(el.value)||0);
-    const sum = trickVals.reduce((a,b)=>a+b,0);
-    const warn = document.getElementById('tricksWarn');
-    warn.textContent = (sum!==round) ? `⚠ مجموع دست‌های برده‌شده باید برابر ${toFa(round)} باشد (فعلاً: ${toFa(sum)})` : '';
-  }
-  validateTricks();
 
   document.getElementById('saveRoundBtn').addEventListener('click', ()=>{
     const cards = [...holder.querySelectorAll('.pr-card')];
