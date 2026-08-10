@@ -344,21 +344,36 @@ let state = { savedPlayers: [], games: {}, activeGameId: null };
 let ui = { view:'home', newPlayers: [], detailGameId:null, detailRound:1, statsPlayerName:null };
 let saveTimer = null;
 
-/* ---------------- persistence ---------------- */
+/* ---------------- persistence ----------------
+   Uses window.storage when running inside a Claude.ai artifact preview,
+   and falls back to the browser's localStorage for any real deployment
+   (GitHub Pages, your own server, etc.) so data survives a refresh there too. */
+const HAS_ARTIFACT_STORAGE = (typeof window!=='undefined' && !!window.storage);
+
 async function loadState(){
   try{
-    const res = await window.storage.get(STORAGE_KEY, false);
-    if(res && res.value){
-      const parsed = JSON.parse(res.value);
+    let raw = null;
+    if(HAS_ARTIFACT_STORAGE){
+      const res = await window.storage.get(STORAGE_KEY, false);
+      raw = res && res.value;
+    } else {
+      raw = localStorage.getItem(STORAGE_KEY);
+    }
+    if(raw){
+      const parsed = JSON.parse(raw);
       state = Object.assign({savedPlayers:[],games:{},activeGameId:null}, parsed);
     }
-  }catch(e){ /* no saved data yet */ }
+  }catch(e){ /* no saved data yet, or storage unavailable */ }
   renderAll();
 }
 function saveState(){
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async ()=>{
-    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(state), false); }
+    try{
+      const json = JSON.stringify(state);
+      if(HAS_ARTIFACT_STORAGE){ await window.storage.set(STORAGE_KEY, json, false); }
+      else{ localStorage.setItem(STORAGE_KEY, json); }
+    }
     catch(e){ showToast('⚠ ذخیره‌سازی با خطا مواجه شد'); }
   }, 150);
 }
@@ -529,7 +544,7 @@ function renderContinueCard(){
         <button class="btn btn-gold btn-sm" id="continueBtn">ادامه بازی ⚓</button>
       </div>
     </div>`;
-  document.getElementById('continueBtn').addEventListener('click', ()=>{ playClick(); goView('detail',{gameId:g.id}); });
+  document.getElementById('continueBtn').addEventListener('click', ()=>{ playClick(); openGame(g.id); });
 }
 function renderHome(){
   ui.newPlayers = [];
@@ -579,6 +594,19 @@ function gameWinner(game){
   return best ? {player:best, score:bestScore} : null;
 }
 function roundsFilledCount(game){ return Object.keys(game.rounds).filter(r=> game.rounds[r] && Object.keys(game.rounds[r]).length===game.players.length).length; }
+function firstOpenRound(game){
+  for(let r=1;r<=TOTAL_ROUNDS;r++){
+    const rd = game.rounds[r];
+    if(!rd || Object.keys(rd).length!==game.players.length) return r;
+  }
+  return TOTAL_ROUNDS;
+}
+function openGame(gameId){
+  const g = state.games[gameId];
+  if(!g) return;
+  ui.detailRound = firstOpenRound(g);
+  goView('detail', {gameId});
+}
 
 /* =========================================================
    GAME DETAIL VIEW (works for active + past games; editable)
@@ -847,11 +875,7 @@ function renderHistory(){
 
   grid.querySelectorAll('.game-card').forEach(card=> card.addEventListener('click', e=>{
     if(e.target.closest('.del-btn')) return;
-    playClick(); ui.detailRound = 1;
-    const g = state.games[card.dataset.id];
-    const firstEmpty = [...Array(TOTAL_ROUNDS)].findIndex((_,i)=> !g.rounds[i+1]);
-    ui.detailRound = firstEmpty===-1? TOTAL_ROUNDS : firstEmpty+1;
-    goView('detail', {gameId:card.dataset.id});
+    playClick(); openGame(card.dataset.id);
   }));
   grid.querySelectorAll('.del-btn').forEach(btn=> btn.addEventListener('click', e=>{
     e.stopPropagation(); playClick();
