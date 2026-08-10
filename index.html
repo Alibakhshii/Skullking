@@ -32,6 +32,8 @@ body{
 button{font-family:inherit;}
 ::-webkit-scrollbar{height:7px; width:7px;}
 ::-webkit-scrollbar-thumb{background:var(--line-strong); border-radius:4px;}
+:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+button:focus-visible, .isle:focus-visible{outline:2px solid var(--gold-bright); outline-offset:2px;}
 
 /* ---------- topbar & nav ---------- */
 .topbar{display:flex; align-items:center; justify-content:space-between; padding:8px 2px 14px; border-bottom:1px solid var(--line); margin-bottom:14px; gap:10px; flex-wrap:wrap;}
@@ -44,6 +46,11 @@ button{font-family:inherit;}
 .topbar-actions{display:flex; gap:8px;}
 .icon-btn{background:var(--panel); border:1px solid var(--line); color:var(--text); width:40px; height:40px; border-radius:50%; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.2s;}
 .icon-btn:hover{border-color:var(--gold); box-shadow:0 0 12px rgba(201,162,39,0.3);}
+.save-status{font-size:11px; color:var(--text-dim2); display:flex; align-items:center; gap:5px; opacity:0; transition:opacity .3s;}
+.save-status.show{opacity:1;}
+.save-status .dot{width:6px; height:6px; border-radius:50%; background:var(--teal);}
+.save-status.saved .dot{background:var(--green);}
+.save-status.error .dot{background:var(--blood);}
 
 .navtabs{display:flex; gap:6px; overflow-x:auto; margin-bottom:20px; padding-bottom:2px;}
 .navtab{flex:none; background:transparent; border:1px solid var(--line); color:var(--text-dim); padding:9px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; transition:.2s; white-space:nowrap;}
@@ -80,13 +87,18 @@ h2.section-title{font-family:'Cinzel',serif; font-weight:800; font-size:19px; co
 .add-player-box input{flex:1; background:var(--abyss); border:1px solid var(--line); border-radius:8px; padding:12px 14px; color:var(--text); font-family:'Vazirmatn'; font-size:14px; outline:none; transition:.2s;}
 .add-player-box input:focus{border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,162,39,0.12);}
 .suggest-box{position:absolute; top:calc(100% + 4px); right:0; left:70px; background:var(--panel-3); border:1px solid var(--line-strong); border-radius:10px; z-index:20; max-height:160px; overflow-y:auto; box-shadow:var(--shadow-deep);}
-.suggest-item{padding:10px 14px; font-size:13px; cursor:pointer; border-bottom:1px solid var(--line);}
+.suggest-item{padding:10px 14px; font-size:13px; cursor:pointer; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:10px;}
 .suggest-item:last-child{border-bottom:none;}
 .suggest-item:hover{background:rgba(201,162,39,0.1); color:var(--gold-bright);}
 .err-msg{color:var(--blood); font-size:12px; min-height:16px; margin:2px 2px 10px;}
 .setup-actions{display:flex; gap:12px; margin-top:14px; flex-wrap:wrap;}
 .continue-card{border:1px solid var(--teal); box-shadow:0 0 0 1px rgba(58,166,166,0.15), var(--shadow-deep); margin-bottom:18px;}
 .continue-card .row{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;}
+.dash-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:18px;}
+.dash-box{background:linear-gradient(180deg,var(--panel),var(--panel-2)); border:1px solid var(--line); border-radius:12px; padding:14px; text-align:center;}
+.dash-box .ic{font-size:20px; margin-bottom:6px;}
+.dash-box .v{font-family:'JetBrains Mono'; font-weight:800; font-size:18px; color:var(--gold-bright);}
+.dash-box .l{font-size:11px; color:var(--text-dim); margin-top:3px;}
 
 /* ---------- voyage map ---------- */
 .voyage-map{display:flex; align-items:center; overflow-x:auto; padding:22px 8px 28px; margin-bottom:6px;}
@@ -149,6 +161,14 @@ table.score-table{width:100%; border-collapse:collapse; min-width:420px;}
 .wax-seal{width:24px; height:24px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#C23B4A,#7A1B27); box-shadow:0 2px 4px rgba(0,0,0,0.4); flex:none;}
 
 /* ---------- history ---------- */
+.history-toolbar{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;}
+.history-toolbar input[type="text"]{flex:1; min-width:160px; background:var(--abyss); border:1px solid var(--line); border-radius:8px; padding:10px 12px; color:var(--text); font-family:'Vazirmatn'; font-size:13px; outline:none;}
+.history-toolbar input[type="text"]:focus{border-color:var(--gold);}
+.history-toolbar select{background:var(--abyss); border:1px solid var(--line); border-radius:8px; padding:10px 10px; color:var(--text); font-family:'Vazirmatn'; font-size:13px; outline:none;}
+.select-bar{display:flex; align-items:center; justify-content:space-between; background:var(--panel-3); border:1px solid var(--line-strong); border-radius:10px; padding:10px 14px; margin-top:12px; font-size:13px; flex-wrap:wrap; gap:10px;}
+.game-card-check{display:none; margin-left:10px;}
+.game-card.select-mode .game-card-check{display:inline-block;}
+.game-card.selected{border-color:var(--gold); box-shadow:0 0 0 2px rgba(201,162,39,0.2);}
 .history-grid{display:grid; gap:12px;}
 .game-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 18px; cursor:pointer; transition:.2s;}
 .game-card:hover{border-color:var(--line-strong); transform:translateY(-1px);}
@@ -195,8 +215,9 @@ table.lb-table{width:100%; border-collapse:collapse; min-width:640px;}
 .stat-box .l{font-size:11px; color:var(--text-dim); margin-top:3px;}
 canvas#chartCanvas{width:100%; height:140px; margin-top:8px;}
 
-.toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:var(--panel-2); border:1px solid var(--gold); color:var(--text); padding:11px 20px; border-radius:30px; font-size:13px; z-index:90; box-shadow:var(--shadow-deep); opacity:0; pointer-events:none; transition:.3s;}
-.toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
+.toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:var(--panel-2); border:1px solid var(--gold); color:var(--text); padding:11px 20px; border-radius:30px; font-size:13px; z-index:90; box-shadow:var(--shadow-deep); opacity:0; pointer-events:none; transition:.3s; display:flex; align-items:center; gap:12px; max-width:90vw;}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(-6px); pointer-events:auto;}
+.toast-undo{background:var(--gold); color:#1c1400; border:none; border-radius:16px; padding:5px 12px; font-size:12px; font-weight:700; cursor:pointer; flex:none;}
 
 .trophy{font-size:56px; animation:bob 2.4s ease-in-out infinite; text-align:center;}
 @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-10px) rotate(2deg);}}
@@ -220,7 +241,8 @@ canvas#chartCanvas{width:100%; height:140px; margin-top:8px;}
       <div><h1>SKULL <span>KING</span></h1><small>مدیریت کامل بازی و آمار دریانوردان</small></div>
     </div>
     <div class="topbar-actions">
-      <button class="icon-btn" id="soundToggle" title="صدا">🔊</button>
+      <span class="save-status" id="saveStatus" aria-live="polite"></span>
+      <button class="icon-btn" id="soundToggle" title="صدا" aria-label="روشن/خاموش کردن صدا">🔊</button>
     </div>
   </div>
 
@@ -232,6 +254,7 @@ canvas#chartCanvas{width:100%; height:140px; margin-top:8px;}
 
   <!-- HOME -->
   <section id="view-home" class="screen">
+    <div id="dashboardHolder"></div>
     <div id="continueCardHolder"></div>
     <div class="card">
       <h2 class="section-title">بازی جدید بساز</h2>
@@ -254,6 +277,27 @@ canvas#chartCanvas{width:100%; height:140px; margin-top:8px;}
     <div class="card" style="margin-bottom:16px;">
       <h2 class="section-title">🏴‍☠️ تاریخچه بازی‌ها</h2>
       <p class="section-sub">تمام سفرهای ثبت‌شده — روی هر بازی بزن تا جزئیات دورها را ببینی.</p>
+      <div class="history-toolbar">
+        <input type="text" id="historySearch" placeholder="🔍 جستجوی بازیکن...">
+        <select id="historySort">
+          <option value="date_desc">جدیدترین</option>
+          <option value="date_asc">قدیمی‌ترین</option>
+          <option value="players_desc">بیشترین بازیکن</option>
+          <option value="players_asc">کمترین بازیکن</option>
+          <option value="winner">بر اساس برنده</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" id="selectModeBtn">☑ انتخاب چندتایی</button>
+        <button class="btn btn-ghost btn-sm" id="exportBtn">📤 خروجی</button>
+        <button class="btn btn-ghost btn-sm" id="importBtn">📥 ورودی</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none;">
+      </div>
+      <div id="selectBar" class="select-bar" style="display:none;">
+        <span id="selectCount">۰ بازی انتخاب شده</span>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-blood btn-sm" id="deleteSelectedBtn">🗑 حذف انتخاب‌شده‌ها</button>
+          <button class="btn btn-ghost btn-sm" id="cancelSelectBtn">انصراف</button>
+        </div>
+      </div>
     </div>
     <div class="history-grid" id="historyGrid"></div>
   </section>
@@ -295,7 +339,7 @@ canvas#chartCanvas{width:100%; height:140px; margin-top:8px;}
 <!-- Player stats modal -->
 <div class="modal-overlay" id="statsModal">
   <div class="modal-box">
-    <button class="modal-close" id="statsClose">✕</button>
+    <button class="modal-close" id="statsClose" aria-label="بستن">✕</button>
     <div style="clear:both;"></div>
     <h2 class="section-title" id="statsName">—</h2>
     <p class="section-sub">آمار کامل عملکرد در تمام بازی‌های تمام‌شده</p>
@@ -343,6 +387,12 @@ const STORAGE_KEY = 'sk_state';
 let state = { savedPlayers: [], games: {}, activeGameId: null };
 let ui = { view:'home', newPlayers: [], detailGameId:null, detailRound:1, statsPlayerName:null };
 let saveTimer = null;
+let roundDirty = false;
+let lastUndo = null; // {label, restore()}
+
+window.addEventListener('beforeunload', (e)=>{
+  if(roundDirty){ e.preventDefault(); e.returnValue = ''; }
+});
 
 /* ---------------- persistence ----------------
    Uses window.storage when running inside a Claude.ai artifact preview,
@@ -366,15 +416,32 @@ async function loadState(){
   }catch(e){ /* no saved data yet, or storage unavailable */ }
   renderAll();
 }
+function setSaveStatus(state_){ // 'saving' | 'saved' | 'error'
+  const el = document.getElementById('saveStatus');
+  if(!el) return;
+  el.classList.add('show');
+  el.classList.remove('saved','error');
+  if(state_==='saving'){ el.innerHTML = '<span class="dot"></span> در حال ذخیره…'; }
+  else if(state_==='saved'){ el.classList.add('saved'); el.innerHTML = '<span class="dot"></span> ذخیره شد'; clearTimeout(setSaveStatus._t); setSaveStatus._t=setTimeout(()=> el.classList.remove('show'), 1800); }
+  else{ el.classList.add('error'); el.innerHTML = '<span class="dot"></span> ذخیره نشد'; }
+}
 function saveState(){
   clearTimeout(saveTimer);
+  setSaveStatus('saving');
   saveTimer = setTimeout(async ()=>{
     try{
       const json = JSON.stringify(state);
       if(HAS_ARTIFACT_STORAGE){ await window.storage.set(STORAGE_KEY, json, false); }
       else{ localStorage.setItem(STORAGE_KEY, json); }
+      setSaveStatus('saved');
+      saveState._retries = 0;
     }
-    catch(e){ showToast('⚠ ذخیره‌سازی با خطا مواجه شد'); }
+    catch(e){
+      setSaveStatus('error');
+      saveState._retries = (saveState._retries||0)+1;
+      if(saveState._retries<=3){ setTimeout(saveState, 1500); }
+      else{ showToast('⚠ ذخیره‌سازی روی این مرورگر ممکن نیست — اطلاعات فقط تا وقتی صفحه باز است می‌مانند'); }
+    }
   }, 150);
 }
 
@@ -386,11 +453,16 @@ function fmtDate(ts){
   const d = new Date(ts);
   return new Intl.DateTimeFormat('fa-IR',{dateStyle:'medium',timeStyle:'short'}).format(d);
 }
-function showToast(msg){
+function showToast(msg, onUndo){
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
+  t.innerHTML = escapeHtml(msg) + (onUndo? ' <button id="toastUndoBtn" class="toast-undo">بازگردانی</button>' : '');
+  t.classList.add('show');
   clearTimeout(showToast._t);
-  showToast._t = setTimeout(()=> t.classList.remove('show'), 2200);
+  showToast._t = setTimeout(()=> t.classList.remove('show'), onUndo? 5000: 2200);
+  if(onUndo){
+    const btn = document.getElementById('toastUndoBtn');
+    btn.addEventListener('click', ()=>{ playClick(); onUndo(); t.classList.remove('show'); });
+  }
 }
 
 /* ---------------- audio engine ---------------- */
@@ -463,6 +535,7 @@ document.getElementById('navtabs').addEventListener('click', e=>{
   playClick(); goView(btn.dataset.view);
 });
 function goView(view, opts={}){
+  roundDirty = false;
   ui.view = view;
   document.querySelectorAll('.navtab').forEach(b=> b.classList.toggle('active', b.dataset.view===view));
   document.querySelectorAll('.screen').forEach(s=> s.classList.remove('active'));
@@ -482,7 +555,7 @@ function normName(n){ return n.trim().replace(/\s+/g,' '); }
 function renderNewPlayersChips(){
   const box = document.getElementById('newPlayersChips');
   box.innerHTML = ui.newPlayers.map((n,i)=>`
-    <div class="player-chip"><span>${escapeHtml(n)}</span><button data-i="${i}" title="حذف">✕</button></div>
+    <div class="player-chip"><span>${escapeHtml(n)}</span><button data-i="${i}" title="حذف" aria-label="حذف ${escapeHtml(n)}">✕</button></div>
   `).join('');
   box.querySelectorAll('button').forEach(b=> b.addEventListener('click', e=>{
     playClick(); ui.newPlayers.splice(+e.currentTarget.dataset.i,1); renderNewPlayersChips();
@@ -508,9 +581,11 @@ newPlayerInput.addEventListener('input', ()=>{
   if(!q){ box.style.display='none'; return; }
   const matches = state.savedPlayers.filter(p=> p.toLowerCase().includes(q) && !ui.newPlayers.some(np=>np.toLowerCase()===p.toLowerCase())).slice(0,6);
   if(!matches.length){ box.style.display='none'; return; }
-  box.innerHTML = matches.map(m=>`<div class="suggest-item">${escapeHtml(m)}</div>`).join('');
+  const gamesByName = {};
+  Object.values(state.games).forEach(g=> g.players.forEach(p=>{ gamesByName[p.name]=(gamesByName[p.name]||0)+1; }));
+  box.innerHTML = matches.map(m=> `<div class="suggest-item"><span>${escapeHtml(m)}</span><span style="color:var(--text-dim); font-size:11px;">${toFa(gamesByName[m]||0)} بازی</span></div>`).join('');
   box.style.display='block';
-  box.querySelectorAll('.suggest-item').forEach(it=> it.addEventListener('click', ()=>{ playClick(); addNewPlayer(it.textContent); }));
+  box.querySelectorAll('.suggest-item').forEach((it,i)=> it.addEventListener('click', ()=>{ playClick(); addNewPlayer(matches[i]); }));
 });
 document.addEventListener('click', e=>{ if(!e.target.closest('.add-player-box')) document.getElementById('suggestBox').style.display='none'; });
 
@@ -546,10 +621,34 @@ function renderContinueCard(){
     </div>`;
   document.getElementById('continueBtn').addEventListener('click', ()=>{ playClick(); openGame(g.id); });
 }
+function renderDashboard(){
+  const holder = document.getElementById('dashboardHolder');
+  const allGames = Object.values(state.games);
+  if(!allGames.length){ holder.innerHTML=''; return; }
+  const finished = allGames.filter(g=>g.status==='finished');
+  const inProgress = allGames.filter(g=>g.status==='in_progress').length;
+  const stats = computePlayerStats();
+  const top = stats.slice().sort((a,b)=> b.avgScore-a.avgScore)[0];
+  const avgAll = finished.length ? finished.reduce((sum,g)=>{
+    const t = gameTotals(g); const vals = Object.values(t);
+    return sum + (vals.reduce((a,b)=>a+b,0)/vals.length);
+  },0)/finished.length : 0;
+
+  const boxes = [
+    ['🎮', toFa(allGames.length), 'کل بازی‌ها'],
+    ['🏁', toFa(finished.length), 'تمام‌شده'],
+    ['⛵', toFa(inProgress), 'در حال انجام'],
+    ['👥', toFa(state.savedPlayers.length), 'بازیکنان ثبت‌شده'],
+    ['📊', (avgAll>=0?'+':'')+toFa(avgAll.toFixed(1)), 'میانگین امتیاز کلی'],
+    ['🥇', top? escapeHtml(top.name) : '—', 'بهترین بازیکن'],
+  ];
+  holder.innerHTML = `<div class="dash-grid">${boxes.map(([ic,v,l])=>`<div class="dash-box"><div class="ic">${ic}</div><div class="v">${v}</div><div class="l">${l}</div></div>`).join('')}</div>`;
+}
 function renderHome(){
   ui.newPlayers = [];
   renderNewPlayersChips();
   document.getElementById('newPlayerErr').textContent='';
+  renderDashboard();
   renderContinueCard();
 }
 
@@ -699,8 +798,12 @@ function renderRoundEditor(game){
       </div>`;
   });
   html += `</div>`;
-  html += `<div class="round-submit-row"><button class="btn btn-gold" id="saveRoundBtn">ذخیره دور ${existing? '(ویرایش) ':''}🏴‍☠️</button></div>`;
+  html += `<div class="round-submit-row">
+      <button class="btn btn-gold" id="saveRoundBtn">ذخیره دور ${existing? '(ویرایش) ':''}🏴‍☠️</button>
+      ${existing? '<button class="btn btn-ghost btn-sm" id="deleteRoundBtn" style="margin-right:8px;">🗑 حذف این دور</button>' : ''}
+    </div>`;
   holder.innerHTML = html;
+  roundDirty = false;
 
   function scoreLabel(v){ const cls = v>0?'pos':v<0?'neg':'zero'; const sign=v>0?'+':''; return `<span class="${cls}">${sign}${toFa(v)}</span>`; }
 
@@ -734,15 +837,15 @@ function renderRoundEditor(game){
     }
     function clampInt(v,min,max){ let n=parseInt(v); if(isNaN(n)) n=0; return Math.max(min,Math.min(max,n)); }
 
-    card.querySelector('.inc-bid').addEventListener('click', ()=>{ bidIn.value=clampInt((parseInt(bidIn.value)||0)+1,0,999); refreshScore(); });
-    card.querySelector('.dec-bid').addEventListener('click', ()=>{ bidIn.value=clampInt((parseInt(bidIn.value)||0)-1,0,999); refreshScore(); });
-    card.querySelector('.inc-tr').addEventListener('click', ()=>{ trIn.value=clampInt((parseInt(trIn.value)||0)+1,0,999); refreshScore(); });
-    card.querySelector('.dec-tr').addEventListener('click', ()=>{ trIn.value=clampInt((parseInt(trIn.value)||0)-1,0,999); refreshScore(); });
-    bidIn.addEventListener('input', ()=>{ bidIn.value = bidIn.value.replace(/[^0-9]/g,''); refreshScore(); });
-    trIn.addEventListener('input', ()=>{ trIn.value = trIn.value.replace(/[^0-9]/g,''); refreshScore(); });
+    card.querySelector('.inc-bid').addEventListener('click', ()=>{ bidIn.value=clampInt((parseInt(bidIn.value)||0)+1,0,999); roundDirty=true; refreshScore(); });
+    card.querySelector('.dec-bid').addEventListener('click', ()=>{ bidIn.value=clampInt((parseInt(bidIn.value)||0)-1,0,999); roundDirty=true; refreshScore(); });
+    card.querySelector('.inc-tr').addEventListener('click', ()=>{ trIn.value=clampInt((parseInt(trIn.value)||0)+1,0,999); roundDirty=true; refreshScore(); });
+    card.querySelector('.dec-tr').addEventListener('click', ()=>{ trIn.value=clampInt((parseInt(trIn.value)||0)-1,0,999); roundDirty=true; refreshScore(); });
+    bidIn.addEventListener('input', ()=>{ bidIn.value = bidIn.value.replace(/[^0-9]/g,''); roundDirty=true; refreshScore(); });
+    trIn.addEventListener('input', ()=>{ trIn.value = trIn.value.replace(/[^0-9]/g,''); roundDirty=true; refreshScore(); });
     bidIn.addEventListener('blur', ()=>{ bidIn.value = clampInt(bidIn.value,0,999); refreshScore(); });
     trIn.addEventListener('blur', ()=>{ trIn.value = clampInt(trIn.value,0,999); refreshScore(); });
-    bonusInputs.forEach(inp=> inp.addEventListener('input', refreshScore));
+    bonusInputs.forEach(inp=> inp.addEventListener('input', ()=>{ roundDirty=true; refreshScore(); }));
     toggle.addEventListener('click', ()=>{ playClick(); panel.classList.toggle('open'); });
   });
 
@@ -766,26 +869,49 @@ function renderRoundEditor(game){
     });
     game.rounds[round] = roundData;
     game.updatedAt = Date.now();
+    roundDirty = false;
 
     const anyExact = Object.values(roundData).some(e=> e.bid===0 ? e.tricks===0 : e.tricks===e.bid);
     playCannon();
     setTimeout(()=> anyExact? playCoin() : playWomp(), 350);
 
-    // auto-advance / auto-finish
-    const filledRounds = roundsFilledCount(game);
-    if(round===TOTAL_ROUNDS && filledRounds===TOTAL_ROUNDS){
-      game.status='finished'; game.finishedAt=Date.now();
-      if(state.activeGameId===game.id) state.activeGameId=null;
+    // Only an in-progress game auto-advances to the next round or auto-finishes.
+    // Editing a round that belongs to an already-finished game (whether completed
+    // naturally or ended early) just updates that round in place — it never
+    // jumps forward and never overwrites the original finish timestamp.
+    if(game.status==='in_progress'){
+      const filledRounds = roundsFilledCount(game);
+      if(round===TOTAL_ROUNDS && filledRounds===TOTAL_ROUNDS){
+        game.status='finished'; game.finishedAt=Date.now();
+        if(state.activeGameId===game.id) state.activeGameId=null;
+        saveState();
+        renderDetail();
+        setTimeout(()=>{ playFanfare(); launchCoins(); showToast('🏁 بازی به پایان رسید!'); }, 500);
+        return;
+      }
+      if(round < TOTAL_ROUNDS) ui.detailRound = round+1;
       saveState();
       renderDetail();
-      setTimeout(()=>{ playFanfare(); launchCoins(); showToast('🏁 بازی به پایان رسید!'); }, 500);
-      return;
+      showToast('امتیاز دور ثبت شد ✓');
+    } else {
+      saveState();
+      renderDetail();
+      showToast('دور ویرایش شد — امتیازات به‌روزرسانی شدند ✓');
     }
-    if(round < TOTAL_ROUNDS) ui.detailRound = round+1;
-    saveState();
-    renderDetail();
-    showToast('امتیاز دور ثبت شد ✓');
   });
+
+  const delRoundBtn = document.getElementById('deleteRoundBtn');
+  if(delRoundBtn){
+    delRoundBtn.addEventListener('click', ()=>{
+      playClick();
+      pendingConfirm = {type:'deleteRound', gameId: game.id, round};
+      document.getElementById('confirmTitle').textContent = '🗑 حذف دور';
+      document.getElementById('confirmText').textContent = `آیا مطمئن هستید که می‌خواهید امتیازات دور ${toFa(round)} را حذف کنید؟ امتیازات مجموع و رتبه‌بندی دوباره محاسبه می‌شوند.`;
+      document.getElementById('confirmDelete').textContent = 'حذف کن';
+      document.getElementById('confirmDelete').className = 'btn btn-blood btn-sm';
+      document.getElementById('confirmModal').classList.add('open');
+    });
+  }
 }
 
 function renderScoreTable(game){
@@ -833,21 +959,56 @@ document.getElementById('endGameBtn').addEventListener('click', ()=>{
    HISTORY VIEW
 ========================================================= */
 let pendingConfirm = null;
+let selectMode = false;
+let selectedGameIds = new Set();
+
+function exitSelectMode(){
+  selectMode = false;
+  selectedGameIds = new Set();
+  document.getElementById('selectBar').style.display='none';
+  document.getElementById('selectModeBtn').textContent = '☑ انتخاب چندتایی';
+}
+
 function renderHistory(){
   const grid = document.getElementById('historyGrid');
-  const games = Object.values(state.games).sort((a,b)=> b.createdAt-a.createdAt);
-  if(!games.length){
-    grid.innerHTML = `<div class="empty-state"><div class="ic">🗺️</div>هنوز هیچ بازی‌ای ثبت نشده.<br>از تب «خانه» یک سفر جدید شروع کن.</div>`;
+  const q = (document.getElementById('historySearch').value||'').trim().toLowerCase();
+  const sortBy = document.getElementById('historySort').value;
+
+  let games = Object.values(state.games);
+  if(q){ games = games.filter(g=> g.players.some(p=> p.name.toLowerCase().includes(q))); }
+
+  games.sort((a,b)=>{
+    if(sortBy==='date_asc') return a.createdAt-b.createdAt;
+    if(sortBy==='players_desc') return b.players.length-a.players.length;
+    if(sortBy==='players_asc') return a.players.length-b.players.length;
+    if(sortBy==='winner'){
+      const wa = a.status==='finished' ? (gameWinner(a)?.player.name||'') : '';
+      const wb = b.status==='finished' ? (gameWinner(b)?.player.name||'') : '';
+      return wa.localeCompare(wb,'fa');
+    }
+    return b.createdAt-a.createdAt; // date_desc default
+  });
+
+  if(!Object.keys(state.games).length){
+    grid.innerHTML = `<div class="empty-state"><div class="ic">🗺️</div>هنوز هیچ بازی‌ای ثبت نشده.<br><button class="btn btn-gold btn-sm" id="emptyNewGameBtn" style="margin-top:14px;">شروع بازی جدید ⚓</button></div>`;
+    const b = document.getElementById('emptyNewGameBtn');
+    if(b) b.addEventListener('click', ()=>{ playClick(); goView('home'); });
     return;
   }
+  if(!games.length){
+    grid.innerHTML = `<div class="empty-state"><div class="ic">🔍</div>هیچ بازی‌ای با این جستجو پیدا نشد.</div>`;
+    return;
+  }
+
   grid.innerHTML = games.map(g=>{
     const totals = gameTotals(g);
     const win = g.status==='finished' ? gameWinner(g) : null;
     const filled = roundsFilledCount(g);
+    const checked = selectedGameIds.has(g.id);
     return `
-    <div class="game-card" data-id="${g.id}">
+    <div class="game-card ${selectMode?'select-mode':''} ${checked?'selected':''}" data-id="${g.id}">
       <div class="game-card-top">
-        <span class="gname">سفر ${escapeHtml(g.players.slice(0,3).map(p=>p.name).join('، '))}${g.players.length>3?' و '+toFa(g.players.length-3)+' نفر دیگر':''}</span>
+        <span class="gname"><input type="checkbox" class="game-card-check" data-id="${g.id}" ${checked?'checked':''}>سفر ${escapeHtml(g.players.slice(0,3).map(p=>p.name).join('، '))}${g.players.length>3?' و '+toFa(g.players.length-3)+' نفر دیگر':''}</span>
         <span class="badge ${g.status==='finished'?'badge-done':'badge-progress'}">${g.status==='finished'?'🏁 تمام‌شده':'⛵ در حال انجام'}</span>
       </div>
       <div class="game-card-meta">
@@ -865,6 +1026,13 @@ function renderHistory(){
 
   grid.querySelectorAll('.game-card').forEach(card=> card.addEventListener('click', e=>{
     if(e.target.closest('.del-btn')) return;
+    if(selectMode){
+      const id = card.dataset.id;
+      if(selectedGameIds.has(id)) selectedGameIds.delete(id); else selectedGameIds.add(id);
+      updateSelectBar();
+      renderHistory();
+      return;
+    }
     playClick(); openGame(card.dataset.id);
   }));
   grid.querySelectorAll('.del-btn').forEach(btn=> btn.addEventListener('click', e=>{
@@ -877,22 +1045,121 @@ function renderHistory(){
     document.getElementById('confirmModal').classList.add('open');
   }));
 }
+function updateSelectBar(){
+  document.getElementById('selectCount').textContent = `${toFa(selectedGameIds.size)} بازی انتخاب شده`;
+}
+document.getElementById('historySearch').addEventListener('input', renderHistory);
+document.getElementById('historySort').addEventListener('change', renderHistory);
+document.getElementById('selectModeBtn').addEventListener('click', ()=>{
+  playClick();
+  selectMode = !selectMode;
+  document.getElementById('selectModeBtn').textContent = selectMode? '✕ خروج از حالت انتخاب' : '☑ انتخاب چندتایی';
+  document.getElementById('selectBar').style.display = selectMode? 'flex':'none';
+  selectedGameIds = new Set();
+  updateSelectBar();
+  renderHistory();
+});
+document.getElementById('cancelSelectBtn').addEventListener('click', ()=>{ playClick(); exitSelectMode(); renderHistory(); });
+document.getElementById('deleteSelectedBtn').addEventListener('click', ()=>{
+  if(!selectedGameIds.size) return;
+  playClick();
+  pendingConfirm = {type:'deleteMultiple', ids:[...selectedGameIds]};
+  document.getElementById('confirmTitle').textContent = '🗑 حذف چند بازی';
+  document.getElementById('confirmText').textContent = `آیا مطمئن هستید که می‌خواهید ${toFa(selectedGameIds.size)} بازی انتخاب‌شده را حذف کنید؟ این عملیات قابل بازگشت نیست.`;
+  document.getElementById('confirmDelete').textContent = 'حذف کن';
+  document.getElementById('confirmDelete').className = 'btn btn-blood btn-sm';
+  document.getElementById('confirmModal').classList.add('open');
+});
+
+/* ---- Backup: export / import ---- */
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  playClick();
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `skull-king-backup-${stamp}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('فایل پشتیبان دانلود شد ✓');
+});
+document.getElementById('importBtn').addEventListener('click', ()=>{ playClick(); document.getElementById('importFile').click(); });
+document.getElementById('importFile').addEventListener('change', e=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result);
+      if(!parsed || typeof parsed!=='object' || !parsed.games){ throw new Error('invalid'); }
+      state = Object.assign({savedPlayers:[],games:{},activeGameId:null}, parsed);
+      saveState();
+      renderHistory();
+      showToast('اطلاعات با موفقیت بازیابی شد ✓');
+    }catch(err){
+      showToast('⚠ فایل معتبر نیست — بازیابی انجام نشد');
+    }
+    e.target.value='';
+  };
+  reader.readAsText(file);
+});
 document.getElementById('cancelDelete').addEventListener('click', ()=>{ playClick(); document.getElementById('confirmModal').classList.remove('open'); pendingConfirm=null; });
 document.getElementById('confirmDelete').addEventListener('click', ()=>{
   if(pendingConfirm && pendingConfirm.type==='deleteGame'){
     const id = pendingConfirm.id;
+    const backup = JSON.parse(JSON.stringify(state.games[id]));
+    const prevActive = state.activeGameId;
     delete state.games[id];
     if(state.activeGameId===id) state.activeGameId=null;
     saveState();
-    showToast('بازی حذف شد');
-    pendingConfirm=null;
     document.getElementById('confirmModal').classList.remove('open');
+    pendingConfirm=null;
     renderHistory();
+    showToast('بازی حذف شد', ()=>{
+      state.games[id] = backup; state.activeGameId = prevActive; saveState(); renderHistory();
+    });
+    return;
+  }
+  if(pendingConfirm && pendingConfirm.type==='deleteMultiple'){
+    const ids = pendingConfirm.ids;
+    const backups = {}; ids.forEach(id=> backups[id]=JSON.parse(JSON.stringify(state.games[id])));
+    const prevActive = state.activeGameId;
+    ids.forEach(id=>{ delete state.games[id]; if(state.activeGameId===id) state.activeGameId=null; });
+    saveState();
+    document.getElementById('confirmModal').classList.remove('open');
+    pendingConfirm=null;
+    exitSelectMode();
+    renderHistory();
+    showToast(`${toFa(ids.length)} بازی حذف شد`, ()=>{
+      Object.keys(backups).forEach(id=> state.games[id]=backups[id]);
+      state.activeGameId = prevActive; saveState(); renderHistory();
+    });
+    return;
+  }
+  if(pendingConfirm && pendingConfirm.type==='deleteRound'){
+    const {gameId, round} = pendingConfirm;
+    const game = state.games[gameId];
+    if(game){
+      const backupRound = game.rounds[round] ? JSON.parse(JSON.stringify(game.rounds[round])) : null;
+      const wasStatus = game.status, wasFinishedAt = game.finishedAt, prevActive = state.activeGameId;
+      delete game.rounds[round];
+      game.updatedAt = Date.now();
+      if(game.status==='finished'){ game.status='in_progress'; game.finishedAt=null; state.activeGameId = game.id; }
+      saveState();
+      document.getElementById('confirmModal').classList.remove('open');
+      pendingConfirm=null;
+      renderDetail();
+      showToast('دور حذف شد', ()=>{
+        if(backupRound) game.rounds[round]=backupRound;
+        game.status=wasStatus; game.finishedAt=wasFinishedAt; state.activeGameId=prevActive;
+        saveState(); renderDetail();
+      });
+    }
     return;
   }
   if(pendingConfirm && pendingConfirm.type==='endGame'){
     const game = state.games[pendingConfirm.id];
     if(game){
+      const prevActive = state.activeGameId;
       game.status='finished';
       game.finishedAt=Date.now();
       if(state.activeGameId===game.id) state.activeGameId=null;
@@ -900,7 +1167,9 @@ document.getElementById('confirmDelete').addEventListener('click', ()=>{
       document.getElementById('confirmModal').classList.remove('open');
       pendingConfirm=null;
       renderDetail();
-      setTimeout(()=>{ playFanfare(); launchCoins(); showToast('🏁 بازی به پایان رسید!'); }, 300);
+      setTimeout(()=>{ playFanfare(); launchCoins(); showToast('🏁 بازی به پایان رسید!', ()=>{
+        game.status='in_progress'; game.finishedAt=null; state.activeGameId=prevActive; saveState(); renderDetail();
+      }); }, 300);
       return;
     }
   }
