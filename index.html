@@ -346,7 +346,11 @@ canvas#chartCanvas{width:100%; height:140px; margin-top:8px;}
   <section id="view-leaderboard" class="screen">
     <div class="card">
       <h2 class="section-title">🏆 رتبه‌بندی بازیکنان</h2>
-      <p class="section-sub">بر اساس میانگین امتیاز در بازی‌های تمام‌شده (معیار اصلی برای عادلانه بودن رتبه‌بندی)، با در نظر گرفتن درصد برد.</p>
+      <p class="section-sub">یک معیار برای رتبه‌بندی انتخاب کن. برای بازیکنانی که تعداد بازی‌شان کم است، امتیاز به‌صورت عادلانه تعدیل می‌شود تا یک نتیجه استثنایی، رتبه را نادرست نکند.</p>
+      <div class="history-toolbar" style="margin-bottom:4px;">
+        <select id="lbMetric" style="flex:1; min-width:200px;"></select>
+      </div>
+      <p class="section-sub" id="lbMetricNote" style="margin-top:6px;"></p>
       <div class="lb-table-wrap"><table class="lb-table" id="lbTable"></table></div>
     </div>
   </section>
@@ -359,6 +363,7 @@ canvas#chartCanvas{width:100%; height:140px; margin-top:8px;}
     <div style="clear:both;"></div>
     <h2 class="section-title" id="statsName">—</h2>
     <p class="section-sub">آمار کامل عملکرد در تمام بازی‌های تمام‌شده</p>
+    <p class="section-sub" id="statsSampleNote" style="color:var(--gold-bright);"></p>
     <div class="stat-grid" id="statsGrid"></div>
     <canvas id="chartCanvas"></canvas>
   </div>
@@ -709,6 +714,13 @@ function gameWinner(game){
   return best ? {player:best, score:bestScore} : null;
 }
 function roundsFilledCount(game){ return Object.keys(game.rounds).filter(r=> game.rounds[r] && Object.keys(game.rounds[r]).length===game.players.length).length; }
+/* Live in-game ranking: returns game.players re-ordered by current total score
+   (highest first). Never mutates game.players or any player's id/data — this is
+   purely a display-order helper used while a game is in progress. */
+function playersRankedByCurrentScore(game){
+  const totals = gameTotals(game);
+  return game.players.slice().sort((a,b)=> (totals[b.id]||0) - (totals[a.id]||0));
+}
 function firstOpenRound(game){
   for(let r=1;r<=TOTAL_ROUNDS;r++){
     const rd = game.rounds[r];
@@ -778,13 +790,16 @@ function renderRoundEditor(game){
   const existing = game.rounds[round];
 
   let html = `<h2 class="section-title" style="margin-top:4px;">دور ${toFa(round)} از ${toFa(TOTAL_ROUNDS)} <span style="color:var(--text-dim); font-weight:500; font-size:12px;">— ${toFa(round)} کارت برای هر نفر</span></h2>`;
+  html += `<p class="section-sub" style="margin-top:-8px;">بازیکنان بر اساس امتیاز فعلی، از بیشترین به کمترین مرتب شده‌اند.</p>`;
   html += `<div class="pr-grid">`;
-  game.players.forEach(p=>{
+  const rankedPlayers = playersRankedByCurrentScore(game);
+  rankedPlayers.forEach((p, idx)=>{
     const e = (existing && existing[p.id]) ? existing[p.id] : emptyEntry();
     const run = runningTotal(game, round-1, p.id);
+    const rankMedal = idx===0?'🥇 ':idx===1?'🥈 ':idx===2?'🥉 ':`${toFa(idx+1)}. `;
     html += `
       <div class="pr-card" data-pid="${p.id}">
-        <div class="pr-head"><span class="nm">${escapeHtml(p.name)}</span><span class="running">مجموع تا اینجا: ${toFa(run)}</span></div>
+        <div class="pr-head"><span class="nm">${rankMedal}${escapeHtml(p.name)}</span><span class="running">مجموع تا اینجا: ${toFa(run)}</span></div>
         <div class="stepper-row">
           <label>پیش‌بینی</label>
           <div class="stepper">
@@ -933,11 +948,14 @@ function renderRoundEditor(game){
 function renderScoreTable(game){
   const table = document.getElementById('scoreTable');
   const totals = gameTotals(game);
-  let thead = '<thead><tr><th>دور</th>' + game.players.map(p=>`<th>${escapeHtml(p.name)}</th>`).join('') + '</tr></thead>';
+  // Columns are ordered by current total score (highest first), just like the
+  // round-entry cards — pure display order, players' underlying data/ids untouched.
+  const rankedPlayers = playersRankedByCurrentScore(game);
+  let thead = '<thead><tr><th>دور</th>' + rankedPlayers.map(p=>`<th>${escapeHtml(p.name)}</th>`).join('') + '</tr></thead>';
   let tbody = '<tbody>';
   for(let r=1;r<=TOTAL_ROUNDS;r++){
     const rd = game.rounds[r]; if(!rd) continue;
-    tbody += `<tr data-r="${r}"><td>دور ${toFa(r)}</td>` + game.players.map(p=>{
+    tbody += `<tr data-r="${r}"><td>دور ${toFa(r)}</td>` + rankedPlayers.map(p=>{
       const e = rd[p.id]; if(!e) return '<td>—</td>';
       const cls = e.score>0?'score-pos':e.score<0?'score-neg':'';
       const sign = e.score>0?'+':'';
@@ -945,7 +963,7 @@ function renderScoreTable(game){
     }).join('') + '</tr>';
   }
   tbody += '</tbody>';
-  let tfoot = '<tfoot><tr><td>مجموع</td>' + game.players.map(p=>{
+  let tfoot = '<tfoot><tr><td>مجموع</td>' + rankedPlayers.map(p=>{
     const s = totals[p.id]; const cls=s>0?'score-pos':s<0?'score-neg':''; const sign=s>0?'+':'';
     return `<td class="${cls}">${sign}${toFa(s)}</td>`;
   }).join('') + '</tr></tfoot>';
@@ -1197,6 +1215,23 @@ document.getElementById('confirmDelete').addEventListener('click', ()=>{
 /* =========================================================
    LEADERBOARD + PLAYER STATS
 ========================================================= */
+/* Minimum sample sizes used to fairly dampen small-sample stand-outs (Bayesian
+   shrinkage toward the group average — like a weighted "confidence" rating).
+   Tweak these two numbers to make the leaderboard stricter or looser. */
+const LB_MIN_GAMES = 3;   // games needed before per-game stats (avg score, win rate) are trusted at face value
+const LB_MIN_ROUNDS = 10; // rounds needed before per-round stats (bid accuracy, avg/round) are trusted at face value
+
+/* Central place to tune how much each factor counts toward "Overall Performance".
+   Change these weights (they should sum to ~1) to rebalance the composite score. */
+const LB_OVERALL_WEIGHTS = { avgScore:0.35, bidAccuracy:0.25, winRate:0.25, avgRound:0.15 };
+
+function shrinkToMean(value, n, minN, groupMean){
+  // Bayesian/"confidence" average: blends the player's own value with the group
+  // average, weighted by how much data we actually have (n vs minN).
+  if(n<=0) return groupMean;
+  return (value*n + groupMean*minN) / (n+minN);
+}
+
 function computePlayerStats(){
   // aggregate by player name across finished games
   const stats = {}; // name -> {games, wins, totalScore, scores:[], bids:[], tricks:[], bidSuccess, bidFail, bestRound, worstRound, timeline:[]}
@@ -1224,41 +1259,122 @@ function computePlayerStats(){
       }
     });
   });
-  return Object.values(stats).map(s=>({
-    ...s,
-    avgScore: s.games? s.totalScore/s.games : 0,
-    winRate: s.games? s.wins/s.games*100 : 0,
-    highest: s.scores.length? Math.max(...s.scores): 0,
-    lowest: s.scores.length? Math.min(...s.scores): 0,
-    avgBid: s.bids.length? s.bids.reduce((a,b)=>a+b,0)/s.bids.length : 0,
-    avgTricks: s.tricks.length? s.tricks.reduce((a,b)=>a+b,0)/s.tricks.length : 0,
-    bestRound: s.bestRound===-Infinity?0:s.bestRound,
-    worstRound: s.worstRound===Infinity?0:s.worstRound,
-  }));
+
+  // Pass 1: raw per-player numbers
+  let list = Object.values(stats).map(s=>{
+    const roundsPlayed = s.bids.length;
+    const totalTricksWon = s.tricks.reduce((a,b)=>a+b,0);
+    return {
+      ...s,
+      avgScore: s.games? s.totalScore/s.games : 0,
+      winRate: s.games? s.wins/s.games*100 : 0,
+      highest: s.scores.length? Math.max(...s.scores): 0,
+      lowest: s.scores.length? Math.min(...s.scores): 0,
+      avgBid: s.bids.length? s.bids.reduce((a,b)=>a+b,0)/s.bids.length : 0,
+      avgTricks: s.tricks.length? s.tricks.reduce((a,b)=>a+b,0)/s.tricks.length : 0,
+      totalTricksWon,
+      roundsPlayed,
+      bidAccuracy: roundsPlayed? s.bidSuccess/roundsPlayed*100 : 0,
+      avgScorePerRound: roundsPlayed? s.totalScore/roundsPlayed : 0,
+      bestRound: s.bestRound===-Infinity?0:s.bestRound,
+      worstRound: s.worstRound===Infinity?0:s.worstRound,
+    };
+  });
+
+  // Group means, used as the "prior" that small samples get pulled toward
+  const groupMean = key=> list.length? list.reduce((a,s)=>a+s[key],0)/list.length : 0;
+  const gAvgScore = groupMean('avgScore');
+  const gWinRate = groupMean('winRate');
+  const gBidAccuracy = groupMean('bidAccuracy');
+  const gAvgRound = groupMean('avgScorePerRound');
+
+  // Pass 2: fairness-adjusted ("Adj") values + composite Overall score
+  list = list.map(s=>{
+    const avgScoreAdj = shrinkToMean(s.avgScore, s.games, LB_MIN_GAMES, gAvgScore);
+    const winRateAdj = shrinkToMean(s.winRate, s.games, LB_MIN_GAMES, gWinRate);
+    const bidAccuracyAdj = shrinkToMean(s.bidAccuracy, s.roundsPlayed, LB_MIN_ROUNDS, gBidAccuracy);
+    const avgRoundAdj = shrinkToMean(s.avgScorePerRound, s.roundsPlayed, LB_MIN_ROUNDS, gAvgRound);
+    return {...s, avgScoreAdj, winRateAdj, bidAccuracyAdj, avgRoundAdj};
+  });
+
+  // Normalize the four adjusted factors (min-max, 0-100) so they can be combined fairly
+  function norm(key){
+    const vals = list.map(s=>s[key]);
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    const span = (hi-lo)||1;
+    return s => ((s[key]-lo)/span)*100;
+  }
+  const nAvgScore = norm('avgScoreAdj'), nWinRate = norm('winRateAdj'), nBidAcc = norm('bidAccuracyAdj'), nAvgRound = norm('avgRoundAdj');
+  list = list.map(s=>{
+    const overallScore = list.length? (
+      nAvgScore(s)*LB_OVERALL_WEIGHTS.avgScore +
+      nBidAcc(s)*LB_OVERALL_WEIGHTS.bidAccuracy +
+      nWinRate(s)*LB_OVERALL_WEIGHTS.winRate +
+      nAvgRound(s)*LB_OVERALL_WEIGHTS.avgRound
+    ) : 0;
+    return {...s, overallScore};
+  });
+
+  return list;
 }
+
+/* Leaderboard metric definitions used to build the dropdown, sort the table,
+   and label the value shown for each row. `get` reads the fairness-adjusted
+   value where one exists (adjusted values are what determine rank);
+   `getRaw` (when present) is the literal, un-adjusted number for display. */
+const LB_METRICS = [
+  { key:'overall', label:'🎯 عملکرد کلی', get:s=>s.overallScore, fmt:v=>toFa(v.toFixed(1)) },
+  { key:'totalScore', label:'🏆 مجموع امتیاز', get:s=>s.totalScore, fmt:v=>(v>=0?'+':'')+toFa(v) },
+  { key:'avgScore', label:'📊 میانگین امتیاز در هر بازی', get:s=>s.avgScoreAdj, getRaw:s=>s.avgScore, fmt:v=>(v>=0?'+':'')+toFa(v.toFixed(1)) },
+  { key:'bidAccuracy', label:'🎯 دقت پیش‌بینی (Bid)', get:s=>s.bidAccuracyAdj, getRaw:s=>s.bidAccuracy, fmt:v=>toFa(v.toFixed(0))+'٪' },
+  { key:'wins', label:'🥇 تعداد بردها', get:s=>s.wins, fmt:v=>toFa(v) },
+  { key:'winRate', label:'🏅 درصد برد', get:s=>s.winRateAdj, getRaw:s=>s.winRate, fmt:v=>toFa(v.toFixed(0))+'٪' },
+  { key:'avgRound', label:'📈 میانگین امتیاز هر دور', get:s=>s.avgRoundAdj, getRaw:s=>s.avgScorePerRound, fmt:v=>(v>=0?'+':'')+toFa(v.toFixed(1)) },
+  { key:'bestScore', label:'🔥 بهترین امتیاز ثبت‌شده', get:s=>s.highest, fmt:v=>(v>=0?'+':'')+toFa(v) },
+  { key:'tricksWon', label:'🃏 مجموع تریک‌های برده‌شده', get:s=>s.totalTricksWon, fmt:v=>toFa(v) },
+  { key:'gamesPlayed', label:'⚔️ تعداد بازی‌ها', get:s=>s.games, fmt:v=>toFa(v) },
+];
+let lbCurrentMetric = 'overall';
+
+function populateLbMetricDropdown(){
+  const sel = document.getElementById('lbMetric');
+  if(sel.options.length) return; // build once
+  sel.innerHTML = LB_METRICS.map(m=> `<option value="${m.key}">مرتب‌سازی بر اساس: ${m.label}</option>`).join('');
+  sel.value = lbCurrentMetric;
+  sel.addEventListener('change', ()=>{ playClick(); lbCurrentMetric = sel.value; renderLeaderboard(); });
+}
+
 function renderLeaderboard(){
+  populateLbMetricDropdown();
+  document.getElementById('lbMetric').value = lbCurrentMetric;
   const table = document.getElementById('lbTable');
   const stats = computePlayerStats();
+  const metric = LB_METRICS.find(m=>m.key===lbCurrentMetric) || LB_METRICS[0];
+
+  const noteEl = document.getElementById('lbMetricNote');
+  noteEl.textContent = metric.getRaw
+    ? `این معیار برای بازیکنانی با تعداد بازی/دور کم، به‌صورت عادلانه با میانگین گروه تعدیل می‌شود تا یک نتیجه‌ی استثنایی، رتبه را غیرمنصفانه بالا نبرد.`
+    : '';
+
   if(!stats.length){
     table.innerHTML = '';
     table.parentElement.innerHTML = `<div class="empty-state"><div class="ic">🏆</div>وقتی حداقل یک بازی را تمام کنی، رتبه‌بندی اینجا نمایش داده می‌شود.</div>`;
     return;
   }
-  // sort: avg score desc, then win rate desc, then games desc
-  stats.sort((a,b)=> b.avgScore-a.avgScore || b.winRate-a.winRate || b.games-a.games);
+  const ranked = stats.slice().sort((a,b)=> metric.get(b)-metric.get(a) || b.avgScoreAdj-a.avgScoreAdj || b.games-a.games);
   const medal = ['🥇','🥈','🥉'];
-  let thead = `<thead><tr><th>رتبه</th><th>بازیکن</th><th>بازی‌ها</th><th>بردها</th><th>٪ برد</th><th>میانگین</th><th>مجموع</th><th>بهترین بازی</th></tr></thead>`;
-  let tbody = '<tbody>' + stats.map((s,i)=>{
+  let thead = `<thead><tr><th>رتبه</th><th>بازیکن</th><th>بازی‌ها</th><th class="lb-active-col">${metric.label}</th><th>بردها</th><th>٪ برد</th><th>میانگین</th><th>مجموع</th></tr></thead>`;
+  let tbody = '<tbody>' + ranked.map((s,i)=>{
     const rankCls = i===0?'r1':i===1?'r2':i===2?'r3':'';
     return `<tr class="lb-row ${rankCls}" data-name="${escapeHtml(s.name)}">
       <td class="rank-cell">${medal[i]||toFa(i+1)}</td>
       <td>${escapeHtml(s.name)}</td>
       <td>${toFa(s.games)}</td>
+      <td style="color:var(--gold-bright); font-weight:800;">${metric.fmt(metric.get(s))}</td>
       <td>${toFa(s.wins)}</td>
       <td>${toFa(s.winRate.toFixed(0))}٪</td>
       <td>${s.avgScore>=0?'+':''}${toFa(s.avgScore.toFixed(1))}</td>
       <td>${s.totalScore>=0?'+':''}${toFa(s.totalScore)}</td>
-      <td>${s.highest>=0?'+':''}${toFa(s.highest)}</td>
     </tr>`;
   }).join('') + '</tbody>';
   table.innerHTML = thead+tbody;
@@ -1268,26 +1384,49 @@ function renderLeaderboard(){
 }
 
 function openPlayerStats(name){
-  const stats = computePlayerStats().find(s=> s.name===name);
+  const allStats = computePlayerStats();
+  const stats = allStats.find(s=> s.name===name);
   if(!stats) return;
+  const rankedByCurrent = allStats.slice().sort((a,b)=>{
+    const metric = LB_METRICS.find(m=>m.key===lbCurrentMetric) || LB_METRICS[0];
+    return metric.get(b)-metric.get(a);
+  });
+  const metric = LB_METRICS.find(m=>m.key===lbCurrentMetric) || LB_METRICS[0];
+  const rankPos = rankedByCurrent.findIndex(s=> s.name===name)+1;
+
   document.getElementById('statsName').textContent = '🏴‍☠️ ' + name;
   const g = document.getElementById('statsGrid');
   const rows = [
+    [`رتبه فعلی (بر اساس ${metric.label})`, '#'+toFa(rankPos)+' از '+toFa(allStats.length)],
     ['بازی‌ها', toFa(stats.games)],
+    ['دورهای بازی‌شده', toFa(stats.roundsPlayed)],
     ['بردها', toFa(stats.wins)],
-    ['٪ برد', toFa(stats.winRate.toFixed(0))+'٪'],
+    ['٪ برد (خام)', toFa(stats.winRate.toFixed(0))+'٪'],
+    ['٪ برد (تعدیل‌شده)', toFa(stats.winRateAdj.toFixed(0))+'٪'],
     ['مجموع امتیاز', (stats.totalScore>=0?'+':'')+toFa(stats.totalScore)],
-    ['میانگین امتیاز', (stats.avgScore>=0?'+':'')+toFa(stats.avgScore.toFixed(1))],
+    ['میانگین امتیاز (خام)', (stats.avgScore>=0?'+':'')+toFa(stats.avgScore.toFixed(1))],
+    ['میانگین امتیاز (تعدیل‌شده)', (stats.avgScoreAdj>=0?'+':'')+toFa(stats.avgScoreAdj.toFixed(1))],
+    ['میانگین امتیاز هر دور', (stats.avgScorePerRound>=0?'+':'')+toFa(stats.avgScorePerRound.toFixed(1))],
     ['بالاترین امتیاز بازی', (stats.highest>=0?'+':'')+toFa(stats.highest)],
     ['پایین‌ترین امتیاز بازی', (stats.lowest>=0?'+':'')+toFa(stats.lowest)],
+    ['دقت پیش‌بینی (خام)', toFa(stats.bidAccuracy.toFixed(0))+'٪'],
+    ['دقت پیش‌بینی (تعدیل‌شده)', toFa(stats.bidAccuracyAdj.toFixed(0))+'٪'],
     ['میانگین پیش‌بینی', toFa(stats.avgBid.toFixed(1))],
     ['میانگین برد واقعی', toFa(stats.avgTricks.toFixed(1))],
+    ['مجموع تریک‌های برده‌شده', toFa(stats.totalTricksWon)],
     ['پیش‌بینی‌های موفق', toFa(stats.bidSuccess)],
     ['پیش‌بینی‌های ناموفق', toFa(stats.bidFail)],
     ['بهترین دور', (stats.bestRound>=0?'+':'')+toFa(stats.bestRound)],
     ['بدترین دور', (stats.worstRound>=0?'+':'')+toFa(stats.worstRound)],
+    ['عملکرد کلی (۰ تا ۱۰۰)', toFa(stats.overallScore.toFixed(1))],
   ];
   g.innerHTML = rows.map(([l,v])=> `<div class="stat-box"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+  const note = document.getElementById('statsSampleNote');
+  if(note){
+    note.textContent = (stats.games < LB_MIN_GAMES || stats.roundsPlayed < LB_MIN_ROUNDS)
+      ? `⚠ نمونه‌ی این بازیکن هنوز کوچک است (کمتر از ${toFa(LB_MIN_GAMES)} بازی یا ${toFa(LB_MIN_ROUNDS)} دور) — مقادیر «تعدیل‌شده» برای عادلانه بودن، کمی به‌سمت میانگین گروه کشیده شده‌اند.`
+      : '';
+  }
   drawChart(stats.timeline);
   document.getElementById('statsModal').classList.add('open');
 }
